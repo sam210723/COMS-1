@@ -21,7 +21,7 @@ def readbytes(start, length=1):
 # Byte counter for tracking progress through file
 filepos = 0
 
-# Primary Header (type 0)
+# Primary Header (type 0, required)
 if readbytes(filepos, 3) == b'\x00\x00\x10':
     print("Primary Header (type 0, offset {0}):\n\tHeader length:         16".format(filepos))
 else:
@@ -63,6 +63,9 @@ dataLengthHex = hex(dataLengthInt).upper()[2:]
 print("\tData length:           {0} (0x{1})".format(dataLengthInt, dataLengthHex))
 
 filepos += 16
+
+
+# START OPTIONAL HEADERS
 
 # Image Structure Header (type 1)
 if readbytes(filepos, 3) == b'\x01\x00\x09':
@@ -189,6 +192,7 @@ if readbytes(filepos) == b'\x04':
 
     filepos += annotationLengthInt
 
+
 # CCSDS Time Stamp Header (type 5)
 if readbytes(filepos, 3) == b'\x05\x00\x0A':
     print("\nCCSDS Time Stamp Header (type 5, offset {0}):\n\tHeader length:         10".format("0x" + hex(filepos).upper()[2:]))
@@ -238,8 +242,51 @@ if readbytes(filepos, 3) == b'\x05\x00\x0A':
     currentDate = currentDate + timedelta(milliseconds=tField[1])
     print("\t  - Milliseconds:      {0} ({1})".format(tField[1], currentDate.strftime('%H:%M:%S') + " - HH:MM:SS"))
 
+    filepos += 10
 
 
+# Ancillary Text Header (type 6)
+if readbytes(filepos) == b'\x06':
+    print("\nAnnotation Text Header (type 6, offset {0}):".format("0x" + hex(filepos).upper()[2:]))
+
+    # Header type unused. Allows for future LRIT expansion
+    filepos += 0
+
+
+# Key Header (type 7)
+if readbytes(filepos, 3) == b'\x07\x00\x07':
+    print("\nKey Header (type 7, offset {0}):\n\tHeader length:         7".format("0x" + hex(filepos).upper()[2:]))
+
+    encKeyBytes = readbytes(filepos + 3, 4)
+    encKeyInt = int.from_bytes(encKeyBytes, byteorder='big')
+    encKeyHex = hex(encKeyInt).upper()[2:]
+
+    if encKeyHex == "0":
+        encKeyHex += " (disabled)"
+
+    print("\tEncryption key:        0x{0}".format(encKeyHex))
+
+    filepos += 7
+
+
+# Image Segmentation Information Header (type 128)
+if readbytes(filepos, 3) == b'\x80\x00\x07':
+    print("\nImage Segmentation Information Header (type 128, offset {0}):\n\tHeader length:         7".format("0x" + hex(filepos).upper()[2:]))
+
+    # Image Segment Sequence Number
+    segSeqNumByte = readbytes(filepos + 3)
+    segSeqNumInt = int.from_bytes(segSeqNumByte, byteorder='big')
+
+    # Image Segment Total
+    segTotalByte = readbytes(filepos + 4)
+    segTotalInt = int.from_bytes(segTotalByte, byteorder='big')
+
+    print("\tSegment number:        {0} of {1}".format(segSeqNumInt, segTotalInt))
+
+    # Line number of Image Segment
+    lineNumSegBytes = readbytes(filepos + 5, 2)
+    lineNumSegInt = int.from_bytes(lineNumSegBytes, byteorder='big')
+    print("\tLine num of segment:   {0}".format(lineNumSegInt))
 
 
 print()
