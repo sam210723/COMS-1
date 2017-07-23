@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime, timedelta
 
 argparser = argparse.ArgumentParser(description="Extract LRIT header information from COMS-1 .lrit file")
 argparser.add_argument('-f', action="store", dest="path", help="Input LRIT file")
@@ -20,9 +21,9 @@ def readbytes(start, length=1):
 # Byte counter for tracking progress through file
 filepos = 0
 
-# Primary header (type 0)
+# Primary Header (type 0)
 if readbytes(filepos, 3) == b'\x00\x00\x10':
-    print("Primary Header (type 0):\n\tHeader length:         16")
+    print("Primary Header (type 0, offset {0}):\n\tHeader length:         16".format(filepos))
 else:
     print("Error: Primary header not found")
     print("\nExiting...")
@@ -35,7 +36,7 @@ elif readbytes(filepos + 3) == b'\x01':
     fType = "1, Telecommunication System (GTS) message"  # Not used in COMS LRIT
 elif readbytes(filepos + 3) == b'\x02':
     fType = "2, Alpha-numeric text (ANT)"
-elif readbytes(filepos + 3) == b'\x03':
+elif readbytes(filepos + 3) == b'\x03':  # Not used in COMS LRIT
     fType = "3, Encryption key message"
 elif readbytes(filepos + 3) == b'\x80':
     fType = "128, COMS Meteorological Data Processing System (CMDPS) analysis data"
@@ -44,9 +45,9 @@ elif readbytes(filepos + 3) == b'\x81':
 elif readbytes(filepos + 3) == b'\x82':
     fType = "130, Geostationary Ocean Color Imager (GOCI) data"
 else:
-    print("\tFile type:             {0}, Unknown".format(int.from_bytes(readbytes(filepos + 3), byteorder='little')))
-    print("\nExiting...")
-    exit(1)
+    fType = "{0}, Unknown !!".format(int.from_bytes(readbytes(filepos + 3), byteorder='little'))
+    #print("\nExiting...")
+    #exit(1)
 print("\tFile type:             {0}".format(fType))
 
 # Total header length
@@ -58,14 +59,14 @@ print("\tTotal header length:   {0} ({1})".format(totalHeaderLengthInt, totalHea
 # Data field length
 dataLengthBytes = readbytes(filepos + 8, 8)
 dataLengthInt = int.from_bytes(dataLengthBytes, byteorder='big')
-dataLengthHex = "0x" + hex(dataLengthInt).upper()[2:]
-print("\tData length:           {0} ({1})".format(dataLengthInt, dataLengthHex))
+dataLengthHex = hex(dataLengthInt).upper()[2:]
+print("\tData length:           {0} (0x{1})".format(dataLengthInt, dataLengthHex))
 
 filepos += 16
 
-# Image structure header (type 1)
+# Image Structure Header (type 1)
 if readbytes(filepos, 3) == b'\x01\x00\x09':
-    print("\nImage Structure Header (type 1):\n\tHeader length:         9")
+    print("\nImage Structure Header (type 1, offset {0}):\n\tHeader length:         9".format("0x" + hex(filepos).upper()[2:]))
 
     # Bits per pixel (Always 8 for LRIT)
     bppBytes = readbytes(filepos + 3)
@@ -82,7 +83,7 @@ if readbytes(filepos, 3) == b'\x01\x00\x09':
     linesInt = int.from_bytes(linesBytes, byteorder='big')
 
     # Image type based on column and line count
-    if colsInt == 2200 and linesInt == 200:
+    if colsInt == 2200 and linesInt == 2200:
         imageType = "Full Disk (FD)"
     elif colsInt == 1547 and (linesInt == 308 or linesInt == 309):
         imageType = "Extended Northern Hemisphere (ENH)"
@@ -110,3 +111,135 @@ if readbytes(filepos, 3) == b'\x01\x00\x09':
     print("\tCompression:           {0}".format(compressionType))
 
     filepos += 9
+
+
+# Image Navigation Header (type 2)
+if readbytes(filepos, 3) == b'\x02\x00\x33':
+    print("\nImage Navigation Header (type 2, offset {0}):\n\tHeader length:         51".format("0x" + hex(filepos).upper()[2:]))
+
+    # Map Projection name + longitude
+    projectionBytes = readbytes(filepos + 3, 32)
+    projectionString = projectionBytes.decode()
+    if projectionString.__contains__("GEOS"):
+        projection = "Normalized Geostationary Projection (GEOS)"
+    longitude = projectionString[projectionString.index("(")+1:projectionString.index(")")]
+    print("\tProjection:            {0}".format(projection))
+    print("\tLongitude:             {0}° E".format(longitude))
+
+    # Column scaling factor
+    colScalingBytes = readbytes(filepos + 35, 4)
+    colScalingInt = int.from_bytes(colScalingBytes, byteorder='big')
+    print("\tColumn scaling factor: {0}".format(colScalingInt))
+
+    # Line scaling factor
+    lineScalingBytes = readbytes(filepos + 39, 4)
+    lineScalingInt = int.from_bytes(lineScalingBytes, byteorder='big')
+    print("\tLine scaling factor:   {0}".format(lineScalingInt))
+
+    # Column offset
+    colOffsetBytes = readbytes(filepos + 43, 4)
+    colOffsetInt = int.from_bytes(colOffsetBytes, byteorder='big')
+    print("\tColumn offset:         {0}".format(colOffsetInt))
+
+    # Line offset
+    lineOffsetBytes = readbytes(filepos + 47, 4)
+    lineOffsetInt = int.from_bytes(lineOffsetBytes, byteorder='big')
+    print("\tLine offset:           {0}".format(lineOffsetInt))
+
+    filepos += 51
+
+
+# Image Data Function Header (type 3)
+if readbytes(filepos) == b'\x03':
+    print("\nImage Data Function Header (type 3, offset {0}):".format("0x" + hex(filepos).upper()[2:]))
+
+    # Header length
+    dataFuncLengthBytes = readbytes(filepos + 1, 2)
+    dataFuncLengthInt = int.from_bytes(dataFuncLengthBytes, byteorder='big')
+    dataFuncLengthHex = hex(dataFuncLengthInt).upper()[2:]
+    print("\tHeader length:         {0} (0x{1})".format(dataFuncLengthInt, dataFuncLengthHex))
+
+    # Data Definition Block
+    ddbBytes = readbytes(filepos + 3, dataFuncLengthInt - 3)
+    ddbString = ddbBytes.decode()
+
+    ddbFileName = args.path[:-5] + "_IDF-DDB.txt"
+    ddbFile = open(ddbFileName, 'w')
+    ddbFile.write(ddbString)
+    ddbFile.close()
+    print("\tData Definition Block:\n\t  - dumped to \"{0}\"".format(ddbFileName))
+
+    filepos += dataFuncLengthInt
+
+
+# Annotation Text Header (type 4)
+if readbytes(filepos) == b'\x04':
+    print("\nAnnotation Text Header (type 4, offset {0}):".format("0x" + hex(filepos).upper()[2:]))
+
+    # Header length
+    annotationLengthBytes = readbytes(filepos + 1, 2)
+    annotationLengthInt = int.from_bytes(annotationLengthBytes, byteorder='big')
+    annotationLengthHex = hex(annotationLengthInt).upper()[2:]
+    print("\tHeader length:         {0} (0x{1})".format(annotationLengthInt, annotationLengthHex))
+
+    # Text data (usually .lrit filename)
+    annotationTextBytes = readbytes(filepos + 3, annotationLengthInt - 3)
+    annotationTextString = annotationTextBytes.decode()
+    print("\tText data:             \"{0}\"".format(annotationTextString))
+
+    filepos += annotationLengthInt
+
+# CCSDS Time Stamp Header (type 5)
+if readbytes(filepos, 3) == b'\x05\x00\x0A':
+    print("\nCCSDS Time Stamp Header (type 5, offset {0}):\n\tHeader length:         10".format("0x" + hex(filepos).upper()[2:]))
+
+    # CDS P Field
+    pFieldBytes = readbytes(filepos + 3)
+    pFieldInt = int.from_bytes(pFieldBytes, byteorder='big')
+    pFieldBin = bin(pFieldInt)[2:].zfill(8)
+    pFieldStr = str(pFieldBin)
+    print("\tP Field:               {0}".format(pFieldStr))
+
+    # Bit 0 - Extension flag, Bits 1-3 - Time code ID, Bits 4-7 - Detail bits
+    pField = [pFieldStr[0], pFieldStr[1:4], pFieldStr[4:8]]
+
+    # Extension flag
+    if pField[0] == "0":
+        pField[0] += " (No extension)"
+    else:
+        pField[0] += " (Extended field)"
+    print("\t  - Extension flag:    {0}".format(pField[0]))
+
+    # Time code ID
+    if pField[1] == "100":
+        pField[1] += " (1958 January 1 epoch - Level 1 Time Code)"
+    elif pField[1] == "010":
+        pField[1] += " (Agency-defined epoch - Level 2 Time Code)"
+    print("\t  - Time code ID:      {0}".format(pField[1]))
+
+    print("\t  - Detail bits:       {0}".format(pField[2]))
+
+
+    # CDS T Field
+    tFieldBytes = readbytes(filepos + 4, 6)
+    tFieldInt = int.from_bytes(tFieldBytes, byteorder='big')
+    tFieldBin = bin(tFieldInt)[2:].zfill(48)
+    tFieldStr = str(tFieldBin)
+
+    print("\tT Field:               {0}".format(tFieldStr))
+
+    # Bits 0-16 - Days since epoch, Bits 16-48 - Milliseconds of day
+    tField = [int(tFieldStr[0:16], 2), int(tFieldStr[16:48], 2)]
+
+    epoch = datetime.strptime("01/01/1958", '%d/%m/%Y')
+    currentDate = epoch + timedelta(days=tField[0] + 1)
+    print("\t  - Day counter:       {0} ({1})".format(tField[0], currentDate.strftime('%d/%m/%Y') + " - DD/MM/YYYY"))
+
+    currentDate = currentDate + timedelta(milliseconds=tField[1])
+    print("\t  - Milliseconds:      {0} ({1})".format(tField[1], currentDate.strftime('%H:%M:%S') + " - HH:MM:SS"))
+
+
+
+
+
+print()
