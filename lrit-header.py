@@ -1,4 +1,5 @@
 import argparse
+import coms
 from datetime import datetime, timedelta
 
 argparser = argparse.ArgumentParser(description="Extract LRIT header information from COMS-1 .lrit file")
@@ -23,32 +24,17 @@ filepos = 0
 
 # Primary Header (type 0, required)
 if readbytes(filepos, 3) == b'\x00\x00\x10':
-    print("Primary Header (type 0, offset {0}):\n\tHeader length:         16".format(filepos))
+    print("{2}[Type 0 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[0], coms.colours['OKGREEN'], coms.colours['ENDC']))
+    print("\tHeader length:         16")  # Fixed length
 else:
     print("Error: Primary header not found")
     print("\nExiting...")
     exit(1)
 
 # File type
-if readbytes(filepos + 3) == b'\x00':
-    fType = "0, Image data file"
-elif readbytes(filepos + 3) == b'\x01':
-    fType = "1, Telecommunication System (GTS) message"  # Not used in COMS LRIT
-elif readbytes(filepos + 3) == b'\x02':
-    fType = "2, Alpha-numeric text (ANT)"
-elif readbytes(filepos + 3) == b'\x03':  # Not used in COMS LRIT
-    fType = "3, Encryption key message"
-elif readbytes(filepos + 3) == b'\x80':
-    fType = "128, COMS Meteorological Data Processing System (CMDPS) analysis data"
-elif readbytes(filepos + 3) == b'\x81':
-    fType = "129, Numerical Weather Prediction (NWP) data"
-elif readbytes(filepos + 3) == b'\x82':
-    fType = "130, Geostationary Ocean Color Imager (GOCI) data"
-else:
-    fType = "{0}, Unknown !!".format(int.from_bytes(readbytes(filepos + 3), byteorder='little'))
-    #print("\nExiting...")
-    #exit(1)
-print("\tFile type:             {0}".format(fType))
+fTypeInt = int.from_bytes(readbytes(filepos + 3), byteorder='big')
+fTypeStr = coms.fileTypes[fTypeInt]
+print("\tFile type:             {0}, {1}".format(fTypeInt, fTypeStr))
 
 # Total header length
 totalHeaderLengthBytes = readbytes(filepos + 4, 4)
@@ -69,7 +55,8 @@ filepos += 16
 
 # Image Structure Header (type 1)
 if readbytes(filepos, 3) == b'\x01\x00\x09':
-    print("\nImage Structure Header (type 1, offset {0}):\n\tHeader length:         9".format("0x" + hex(filepos).upper()[2:]))
+    print("\n{2}[Type 1 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[1], coms.colours['OKGREEN'], coms.colours['ENDC']))
+    print("\tHeader length:         9")  # Fixed length
 
     # Bits per pixel (Always 8 for LRIT)
     bppBytes = readbytes(filepos + 3)
@@ -118,7 +105,8 @@ if readbytes(filepos, 3) == b'\x01\x00\x09':
 
 # Image Navigation Header (type 2)
 if readbytes(filepos, 3) == b'\x02\x00\x33':
-    print("\nImage Navigation Header (type 2, offset {0}):\n\tHeader length:         51".format("0x" + hex(filepos).upper()[2:]))
+    print("\n{2}[Type 2 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[2], coms.colours['OKGREEN'], coms.colours['ENDC']))
+    print("\tHeader length:         51")  # Fixed length
 
     # Map Projection name + longitude
     projectionBytes = readbytes(filepos + 3, 32)
@@ -154,7 +142,7 @@ if readbytes(filepos, 3) == b'\x02\x00\x33':
 
 # Image Data Function Header (type 3)
 if readbytes(filepos) == b'\x03':
-    print("\nImage Data Function Header (type 3, offset {0}):".format("0x" + hex(filepos).upper()[2:]))
+    print("\n{2}[Type 3 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[3], coms.colours['OKGREEN'], coms.colours['ENDC']))
 
     # Header length
     dataFuncLengthBytes = readbytes(filepos + 1, 2)
@@ -177,7 +165,7 @@ if readbytes(filepos) == b'\x03':
 
 # Annotation Text Header (type 4)
 if readbytes(filepos) == b'\x04':
-    print("\nAnnotation Text Header (type 4, offset {0}):".format("0x" + hex(filepos).upper()[2:]))
+    print("\n{2}[Type 4 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[4], coms.colours['OKGREEN'], coms.colours['ENDC']))
 
     # Header length
     annotationLengthBytes = readbytes(filepos + 1, 2)
@@ -195,7 +183,8 @@ if readbytes(filepos) == b'\x04':
 
 # CCSDS Time Stamp Header (type 5)
 if readbytes(filepos, 3) == b'\x05\x00\x0A':
-    print("\nCCSDS Time Stamp Header (type 5, offset {0}):\n\tHeader length:         10".format("0x" + hex(filepos).upper()[2:]))
+    print("\n{2}[Type 5 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[5], coms.colours['OKGREEN'], coms.colours['ENDC']))
+    print("\tHeader length:         10")
 
     # CDS P Field
     pFieldBytes = readbytes(filepos + 3)
@@ -247,7 +236,7 @@ if readbytes(filepos, 3) == b'\x05\x00\x0A':
 
 # Ancillary Text Header (type 6)
 if readbytes(filepos) == b'\x06':
-    print("\nAnnotation Text Header (type 6, offset {0}):".format("0x" + hex(filepos).upper()[2:]))
+    print("\n{2}[Type 6 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[6], coms.colours['OKGREEN'], coms.colours['ENDC']))
 
     # Header type unused. Allows for future LRIT expansion
     filepos += 0
@@ -255,7 +244,8 @@ if readbytes(filepos) == b'\x06':
 
 # Key Header (type 7)
 if readbytes(filepos, 3) == b'\x07\x00\x07':
-    print("\nKey Header (type 7, offset {0}):\n\tHeader length:         7".format("0x" + hex(filepos).upper()[2:]))
+    print("\n{2}[Type 7 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[7], coms.colours['OKGREEN'], coms.colours['ENDC']))
+    print("\tHeader length:         7")
 
     encKeyBytes = readbytes(filepos + 3, 4)
     encKeyInt = int.from_bytes(encKeyBytes, byteorder='big')
@@ -271,7 +261,8 @@ if readbytes(filepos, 3) == b'\x07\x00\x07':
 
 # Image Segmentation Information Header (type 128)
 if readbytes(filepos, 3) == b'\x80\x00\x07':
-    print("\nImage Segmentation Information Header (type 128, offset {0}):\n\tHeader length:         7".format("0x" + hex(filepos).upper()[2:]))
+    print("\n{2}[Type 128 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[128], coms.colours['OKGREEN'], coms.colours['ENDC']))
+    print("\tHeader length:         7")
 
     # Image Segment Sequence Number
     segSeqNumByte = readbytes(filepos + 3)
