@@ -29,6 +29,7 @@ fileTypes[129] = "Numerical Weather Prediction (NWP) data"
 fileTypes[130] = "Geostationary Ocean Color Imager (GOCI) data"
 fileTypes[131] = "KMA typhoon information"
 
+# Terminal colour characters
 colours = {}
 colours['HEADER'] = '\033[95m'
 colours['OKBLUE'] = '\033[94m'
@@ -38,3 +39,32 @@ colours['FAIL'] = '\033[91m'
 colours['ENDC'] = '\033[0m'
 colours['BOLD'] = '\033[1m'
 colours['UNDERLINE'] = '\033[4m'
+
+
+def intToHex(int):
+    ''' Converts integer into hex string representation
+    :param: int: Integer to convert
+    :return: Hex string
+    '''
+
+    return "0x{0}".format(hex(int).upper()[2:])
+
+
+def parsePrimaryHeader(bytes):
+    ''' Parses Primary Header of a LRIT file
+    :param bytes: First 16 bytes of LRIT file
+    :return: Dictionary
+    '''
+
+    output = {}
+
+    if bytes[0:3] == b'\x00\x00\x10':
+        output['valid'] = True
+        output['header_type'] = 0
+        output['file_type'] = int.from_bytes(bytes[3:4], byteorder='big')
+        output['total_header_len'] = int.from_bytes(bytes[4:8], byteorder='big')
+        output['data_field_len'] = int.from_bytes(bytes[8:16], byteorder='big')
+    else:
+        output['valid'] = False
+
+    return output

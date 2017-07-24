@@ -23,32 +23,19 @@ def readbytes(start, length=1):
 filepos = 0
 
 # Primary Header (type 0, required)
-if readbytes(filepos, 3) == b'\x00\x00\x10':
-    print("{2}[Type 0 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[0], coms.colours['OKGREEN'], coms.colours['ENDC']))
+primaryHeader = coms.parsePrimaryHeader(readbytes(filepos, 16))
+
+if primaryHeader['valid']:
+    print("{3}[Type {0} : Offset {1}] {2}:{4}".format(primaryHeader['header_type'], coms.intToHex(filepos), coms.headerTypes[primaryHeader['header_type']], coms.colours['OKGREEN'], coms.colours['ENDC']))
     print("\tHeader length:         16")  # Fixed length
+    print("\tFile type:             {0}, {1}".format(primaryHeader['file_type'], coms.fileTypes[primaryHeader['file_type']]))
+    print("\tTotal header length:   {0} ({1})".format(primaryHeader['total_header_len'], coms.intToHex(primaryHeader['total_header_len'])))
+    print("\tData length:           {0} ({1})".format(primaryHeader['data_field_len'], coms.intToHex(primaryHeader['data_field_len'])))
+    filepos += 16
 else:
     print("Error: Primary header not found")
     print("\nExiting...")
     exit(1)
-
-# File type
-fTypeInt = int.from_bytes(readbytes(filepos + 3), byteorder='big')
-fTypeStr = coms.fileTypes[fTypeInt]
-print("\tFile type:             {0}, {1}".format(fTypeInt, fTypeStr))
-
-# Total header length
-totalHeaderLengthBytes = readbytes(filepos + 4, 4)
-totalHeaderLengthInt = int.from_bytes(totalHeaderLengthBytes, byteorder='big')
-totalHeaderLengthHexString = "0x" + hex(totalHeaderLengthInt).upper()[2:]
-print("\tTotal header length:   {0} ({1})".format(totalHeaderLengthInt, totalHeaderLengthHexString))
-
-# Data field length
-dataLengthBytes = readbytes(filepos + 8, 8)
-dataLengthInt = int.from_bytes(dataLengthBytes, byteorder='big')
-dataLengthHex = hex(dataLengthInt).upper()[2:]
-print("\tData length:           {0} (0x{1})".format(dataLengthInt, dataLengthHex))
-
-filepos += 16
 
 
 # START OPTIONAL HEADERS
