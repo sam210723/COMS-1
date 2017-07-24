@@ -1,8 +1,16 @@
+"""
+lrit-additional.py
+https://github.com/sam210723/coms-1
+
+Extracts data from LRIT Additional Data files.
+Data includes Alpha-numeric text (ANT), CMDPS (CT/CTT/CTH), and GOCI.
+"""
+
 import argparse
 import coms
 from datetime import datetime, timedelta
 
-argparser = argparse.ArgumentParser(description="Extract Alphanumeric Text information from COMS-1 ADD_ANT .lrit file")
+argparser = argparse.ArgumentParser(description="Extract data from COMS-1 Additional Data (ADD) .lrit file")
 argparser.add_argument('-f', action="store", dest="path", help="Input LRIT file")
 args = argparser.parse_args()
 
@@ -125,12 +133,16 @@ if readbytes(filepos, 3) == b'\x07\x00\x07':
 
     filepos += 7
 
-
-# Annotation Text Data
+# BEGIN DATA DUMPING
 data = readbytes(filepos, primaryHeader['data_field_len'])
-#print("\n{1}--------------------------------ALPHANUMERIC DATA--------------------------------{2}\n{0}".format(data.decode(), coms.colours['OKGREEN'], coms.colours['ENDC']))
-antFileName = args.path[:-5] + "_DATA.txt"
-antFile = open(antFileName, 'w')
-antFile.write(data.decode())
-antFile.close()
-print("\nAlphanumeric text data dumped to \"{0}\"".format(antFileName))
+
+if primaryHeader['file_type'] == 2:  # Alphanumeric Text (ANT)
+    dumpExtension = "txt"
+elif primaryHeader['file_type'] == 128:  # CMDPS Data (CT, CTT, CTH)
+    dumpExtension = "png"
+
+dumpFileName = args.path[:-5] + "_DATA.{0}".format(dumpExtension)
+dumpFile = open(dumpFileName, 'wb')
+dumpFile.write(data)
+dumpFile.close()
+print("\nAdditional Data dumped to \"{0}\"".format(dumpFileName))
