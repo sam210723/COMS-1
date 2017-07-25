@@ -140,6 +140,8 @@ if primaryHeader['file_type'] == 2:  # Alphanumeric Text (ANT)
     dumpExtension = "txt"
 elif primaryHeader['file_type'] == 128:  # CMDPS Data (CT, CTT, CTH)
     dumpExtension = "png"
+elif primaryHeader['file_type'] == 132 or primaryHeader['file_type'] == 130:  # GOCI (seems to have 2 file type codes)
+    dumpExtension = "jpg"
 
 dumpFileName = args.path[:-5] + "_DATA.{0}".format(dumpExtension)
 dumpFile = open(dumpFileName, 'wb')

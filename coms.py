@@ -28,6 +28,7 @@ fileTypes[128] = "COMS Meteorological Data Processing System (CMDPS) analysis da
 fileTypes[129] = "Numerical Weather Prediction (NWP) data"
 fileTypes[130] = "Geostationary Ocean Color Imager (GOCI) data"
 fileTypes[131] = "KMA typhoon information"
+fileTypes[132] = fileTypes[130]
 
 # Terminal colour characters
 colours = {}
