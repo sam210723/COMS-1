@@ -1,3 +1,10 @@
+"""
+lrit-header.py
+https://github.com/sam210723/coms-1
+
+Parses LRIT file displays header information in a human-readable format.
+"""
+
 import argparse
 import coms
 from datetime import datetime, timedelta
