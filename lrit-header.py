@@ -2,14 +2,14 @@
 lrit-header.py
 https://github.com/sam210723/coms-1
 
-Parses LRIT file displays header information in a human-readable format.
+Parses LRIT file and displays header information in a human-readable format.
 """
 
 import argparse
 import coms
 from datetime import datetime, timedelta
 
-argparser = argparse.ArgumentParser(description="Extract LRIT header information from COMS-1 .lrit file")
+argparser = argparse.ArgumentParser(description="Parses LRIT file and displays header information in a human-readable format.")
 argparser.add_argument('-f', action="store", dest="path", help="Input LRIT file")
 args = argparser.parse_args()
 
@@ -272,6 +272,8 @@ if readbytes(filepos, 3) == b'\x80\x00\x07':
     lineNumSegBytes = readbytes(filepos + 5, 2)
     lineNumSegInt = int.from_bytes(lineNumSegBytes, byteorder='big')
     print("\tLine num of segment:   {0}".format(lineNumSegInt))
+
+    filepos += 7
 
 
 print()

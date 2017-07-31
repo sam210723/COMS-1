@@ -2,7 +2,7 @@
 lrit-additional.py
 https://github.com/sam210723/coms-1
 
-Extracts data from LRIT Additional Data files.
+Extracts data from LRIT Additional Data (ADD) files.
 Data includes Alpha-numeric text (ANT), CMDPS (CT/CTT/CTH), and GOCI.
 """
 
@@ -10,7 +10,7 @@ import argparse
 import coms
 from datetime import datetime, timedelta
 
-argparser = argparse.ArgumentParser(description="Extract data from COMS-1 Additional Data (ADD) .lrit file")
+argparser = argparse.ArgumentParser(description="Extracts data from LRIT Additional Data (ADD) files. Data includes Alpha-numeric text (ANT), CMDPS (CT/CTT/CTH), and GOCI.")
 argparser.add_argument('-f', action="store", dest="path", help="Input LRIT file")
 args = argparser.parse_args()
 
