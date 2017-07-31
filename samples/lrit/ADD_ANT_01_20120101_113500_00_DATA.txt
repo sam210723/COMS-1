@@ -1,0 +1,161 @@
+COMS MI LRIT WOP(Weekly Operation Plan) BY NATIONAL METEOROLOGICAL SATELLITE CENTER, KOREA METEROLOGICAL ADMINSTRATION
+
+DISSEMINATION SCHEDULE FROM 2012/01/02 TO 2012/01/08
+UPDATE 2012/01/01
+
+NOTE: ＊ FOR SEMI REAL-TIME INFORMATIN ON COMS OPERATION, PLEASE REFER TO FOLLOWING WEBSITE. (http://nmsc.kma.go.kr)
+
+＊An wheel off-loading maneuver is scheduled from [00:45:00.000] on [2012/01/02~01/08].    For about 20 minutes, the image quality might be temporarily deteriorated.    For about 20 minutes, the image might be disseminated with chipping. (See the following schedule for the details)＊An wheel off-loading maneuver is scheduled from [06:45:00.000] on [2012/01/02~01/08].    For about 20 minutes, the image quality might be temporarily deteriorated.    For about 20 minutes, the image might be disseminated with chipping. (See the following schedule for the details)
+
+SCHEDULE:
+
+TIME(UTC)        LRIT    ABBR_ID 02 03 04 05 06 07 08
+0009-0012        E01        ENH  O  O  O  O  O  O  O
+0024-0027        E02        ENH  O  O  O  O  O  O  O
+0028-0030        C01         CT  O  O  O  O  O  O  O
+0032-0034        C01        CTH  O  O  O  O  O  O  O
+0035-0037        C01        CTT  O  O  O  O  O  O  O
+0039-0042        E03        ENH  O  O  O  O  O  O  O
+0045-0046        G01       GOCI  O  O  O  O  O  O  O
+0054-0057        E04        ENH  O  O  O  O  O  O  O
+0109-0112        E05        ENH  X  X  X  X  X  X  X
+0124-0127        E06        ENH  O  O  O  O  O  O  O
+0139-0142        E07        ENH  O  O  O  O  O  O  O
+0145-0146        G02       GOCI  O  O  O  O  O  O  O
+0154-0157        E08        ENH  O  O  O  O  O  O  O
+0209-0212        E09        ENH  O  O  O  O  O  O  O
+0224-0227        E10        ENH  O  O  O  O  O  O  O
+0238-0239        G03       GOCI  O  O  O  O  O  O  O
+0240-0257        F01         FD  O  O  O  O  O  O  O
+0309-0312        E11        ENH  O  O  O  O  O  O  O
+0324-0327        E12        ENH  O  O  O  O  O  O  O
+0328-0330        C02         CT  O  O  O  O  O  O  O
+0332-0334        C02        CTH  O  O  O  O  O  O  O
+0335-0337        C02        CTT  O  O  O  O  O  O  O
+0339-0342        E13        ENH  O  O  O  O  O  O  O
+0345-0346        G04       GOCI  O  O  O  O  O  O  O
+0354-0357        E14        ENH  O  O  O  O  O  O  O
+0409-0412        E15        ENH  O  O  O  O  O  O  O
+0424-0427        E16        ENH  O  O  O  O  O  O  O
+0439-0442        E17        ENH  O  O  O  O  O  O  O
+0445-0446        G05       GOCI  O  O  O  O  O  O  O
+0454-0457        E18        ENH  O  O  O  O  O  O  O
+0509-0512        E19        ENH  O  O  O  O  O  O  O
+0524-0527        E20        ENH  O  O  O  O  O  O  O
+0538-0539        G06       GOCI  O  O  O  O  O  O  O
+0540-0557        F02         FD  O  O  O  O  O  O  O
+0609-0612        E21        ENH  O  O  O  O  O  O  O
+0624-0627        E22        ENH  O  O  O  O  O  O  O
+0628-0630        C03         CT  O  O  O  O  O  O  O
+0632-0634        C03        CTH  O  O  O  O  O  O  O
+0635-0637        C03        CTT  O  O  O  O  O  O  O
+0639-0642        E23        ENH  O  O  O  O  O  O  O
+0645-0646        G07       GOCI  O  O  O  O  O  O  O
+0654-0657        E24        ENH  O  O  O  O  O  O  O
+0709-0712        E25        ENH  X  X  X  X  X  X  X
+0724-0727        E26        ENH  O  O  O  O  O  O  O
+0739-0742        E27        ENH  O  O  O  O  O  O  O
+0745-0746        G08       GOCI  O  O  O  O  O  O  O
+0754-0757        E28        ENH  O  O  O  O  O  O  O
+0809-0812        E29        ENH  O  O  O  O  O  O  O
+0824-0827        E30        ENH  O  O  O  O  O  O  O
+0838-0839        G09       GOCI  O  O  O  O  O  O  O
+0840-0857        F03         FD  O  O  O  O  O  O  O
+0909-0912        E31        ENH  O  O  O  O  O  O  O
+0924-0927        E32        ENH  O  O  O  O  O  O  O
+0928-0930        C04         CT  O  O  O  O  O  O  O
+0932-0934        C04        CTH  O  O  O  O  O  O  O
+0935-0937        C04        CTT  O  O  O  O  O  O  O
+0939-0942        E33        ENH  O  O  O  O  O  O  O
+0945-0946        G10       GOCI  O  O  O  O  O  O  O
+0954-0957        E34        ENH  O  O  O  O  O  O  O
+1009-1012        E35        ENH  O  O  O  O  O  O  O
+1024-1027        E36        ENH  O  O  O  O  O  O  O
+1039-1042        E37        ENH  O  O  O  O  O  O  O
+1045-1046        G11       GOCI  O  O  O  O  O  O  O
+1054-1057        E38        ENH  O  O  O  O  O  O  O
+1109-1112        E39        ENH  O  O  O  O  O  O  O
+1124-1127        E40        ENH  O  O  O  O  O  O  O
+1135-1136        A01        ANT  O  O  O  O  O  O  O
+1138-1139        G12       GOCI  O  O  O  O  O  O  O
+1140-1157        F04         FD  O  O  O  O  O  O  O
+1209-1212        E41        ENH  O  O  O  O  O  O  O
+1224-1227        E42        ENH  O  O  O  O  O  O  O
+1228-1230        C05         CT  O  O  O  O  O  O  O
+1232-1234        C05        CTH  O  O  O  O  O  O  O
+1235-1237        C05        CTT  O  O  O  O  O  O  O
+1239-1242        E43        ENH  O  O  O  O  O  O  O
+1245-1246        G13       GOCI  O  O  O  O  O  O  O
+1254-1257        E44        ENH  O  O  O  O  O  O  O
+1309-1312        E45        ENH  O  O  O  O  O  O  O
+1324-1327        E46        ENH  O  O  O  O  O  O  O
+1339-1342        E47        ENH  O  O  O  O  O  O  O
+1345-1346        G14       GOCI  O  O  O  O  O  O  O
+1354-1357        E48        ENH  O  O  O  O  O  O  O
+1409-1412        E49        ENH  O  O  O  O  O  O  O
+1424-1427        E50        ENH  O  O  O  O  O  O  O
+1438-1439        G15       GOCI  O  O  O  O  O  O  O
+1440-1457        F05         FD  O  O  O  O  O  O  O
+1509-1512        E51        ENH  O  O  O  O  O  O  O
+1524-1527        E52        ENH  O  O  O  O  O  O  O
+1528-1530        C06         CT  O  O  O  O  O  O  O
+1532-1534        C06        CTH  O  O  O  O  O  O  O
+1535-1537        C06        CTT  O  O  O  O  O  O  O
+1539-1542        E53        ENH  O  O  O  O  O  O  O
+1545-1546        G16       GOCI  O  O  O  O  O  O  O
+1554-1557        E54        ENH  O  O  O  O  O  O  O
+1609-1612        E55        ENH  O  O  O  O  O  O  O
+1624-1627        E56        ENH  O  O  O  O  O  O  O
+1639-1642        E57        ENH  O  O  O  O  O  O  O
+1645-1646        G17       GOCI  O  O  O  O  O  O  O
+1654-1657        E58        ENH  O  O  O  O  O  O  O
+1709-1712        E59        ENH  O  O  O  O  O  O  O
+1724-1727        E60        ENH  O  O  O  O  O  O  O
+1738-1739        G18       GOCI  O  O  O  O  O  O  O
+1740-1757        F06         FD  O  O  O  O  O  O  O
+1809-1812        E61        ENH  O  O  O  O  O  O  O
+1824-1827        E62        ENH  O  O  O  O  O  O  O
+1828-1830        C07         CT  O  O  O  O  O  O  O
+1832-1834        C07        CTH  O  O  O  O  O  O  O
+1835-1837        C07        CTT  O  O  O  O  O  O  O
+1839-1842        E63        ENH  O  O  O  O  O  O  O
+1845-1846        G19       GOCI  O  O  O  O  O  O  O
+1854-1857        E64        ENH  O  O  O  O  O  O  O
+1909-1912        E65        ENH  O  O  O  O  O  O  O
+1924-1927        E66        ENH  O  O  O  O  O  O  O
+1939-1942        E67        ENH  O  O  O  O  O  O  O
+1945-1946        G20       GOCI  O  O  O  O  O  O  O
+1954-1957        E68        ENH  O  O  O  O  O  O  O
+2009-2012        E69        ENH  O  O  O  O  O  O  O
+2024-2027        E70        ENH  O  O  O  O  O  O  O
+2038-2039        G21       GOCI  O  O  O  O  O  O  O
+2040-2057        F07         FD  O  O  O  O  O  O  O
+2109-2112        E71        ENH  O  O  O  O  O  O  O
+2124-2127        E72        ENH  O  O  O  O  O  O  O
+2128-2130        C08         CT  O  O  O  O  O  O  O
+2132-2134        C08        CTH  O  O  O  O  O  O  O
+2135-2137        C08        CTT  O  O  O  O  O  O  O
+2139-2142        E73        ENH  O  O  O  O  O  O  O
+2145-2146        G22       GOCI  O  O  O  O  O  O  O
+2154-2157        E74        ENH  X  O  O  O  O  O  O
+2209-2212        E75        ENH  O  O  O  O  O  O  O
+2224-2227        E76        ENH  O  O  O  O  O  O  O
+2239-2242        E77        ENH  O  O  O  O  O  O  O
+2245-2246        G23       GOCI  O  O  O  O  O  O  O
+2254-2257        E78        ENH  O  O  O  O  O  O  O
+2309-2312        E79        ENH  O  O  O  O  O  O  O
+2324-2327        E80        ENH  O  O  O  O  O  O  O
+2338-2339        G24       GOCI  O  O  O  O  O  O  O
+2340-2357        F08         FD  O  O  O  O  O  O  O
+
+ABBREVIATIONS:IMAGERY IN ALL WAVELENTH WILL BE DISSEMINATED EACH TIMEFXX : FULL DISK(FD) OBSERVATION (XX DENOTES SEQUENTIAL NUMBER OF DAILY SCHEDULE)EXX : EXETENDED NORTHERN HEMISPHERE(ENH) OBSERVATIONLXX : LIMITED SOUTHERN HEMISPHERE(LSH) OBSERVATIONAXX : ASIAN-PACIFIC NORTHERN HEMISPHERE(APNH) OBSERVATIONANTXX: ALPHA NUMERIC TEXT(WEEKLY OPERATION PLAN)GOCIXX : GEOSTATIONARY OCEAN COLOR IMAGER(L2 IMAGE)CTXX     : CLOUD TYPE(L2 IMAGE)CTTXX   : CLOUD TOP TEMPERATURE(L2 IMAGE)CTHXX   : CLOUD TOP HEIGHT(L2 IMAGE)O   : OBSERVATION AND DISSEMINATION ARE SCHEDULEDX   : SCHEDUELED LRIT WILL BE CANCELED
+
+REMARKS: 1) IN CASE OF SYSTEM MAINTENANCE, THE SCHEUDLE WILL BE CANCELED. 2) IN CASE OF ECLIPSE OPERATION OR SOLAR-INTERFERENCE OPERATION, THE SCHEDULE WILL BE CHANGED. 3) THE SCHEDULE IS SUBJECT  CHANGE WITHOUT NOTICE. 4) CONVERSION EQUATION (DIGITAL NUMBER TO RADIANCE)        RADIANCE =GAIN × DIGTAL NUMBER + OFFSET                      GAIN(SIDE A)       OFFSET(SIDE A)         GAIN(SIDE B)      OFFSET(SIDE B)
+       VIS               646342            -32056100               646342            -32056100
+      SWIR             -3378.43              3209750             -3378.43              3209750
+        WV             -17241.4             16372800             -17241.4             16372800
+       IR1             -18891.2             17955400             -18891.2             17955400
+       IR2               -16619             15806200               -16619             15806200
+
+COMS MI LRIT WOP END;
+
