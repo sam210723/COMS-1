@@ -35,7 +35,7 @@ primaryHeader = coms.parsePrimaryHeader(readbytes(filepos, 16))
 
 if primaryHeader['valid']:
     print("{3}[Type {0} : Offset {1}] {2}:{4}".format(primaryHeader['header_type'], coms.intToHex(filepos), coms.headerTypes[primaryHeader['header_type']], coms.colours['OKGREEN'], coms.colours['ENDC']))
-    print("\tHeader length:         16")  # Fixed length
+    print("\tHeader length:         16 (0x10)")  # Fixed length
     print("\tFile type:             {0}, {1}".format(primaryHeader['file_type'], coms.fileTypes[primaryHeader['file_type']]))
     print("\tTotal header length:   {0} ({1})".format(primaryHeader['total_header_len'], coms.intToHex(primaryHeader['total_header_len'])))
     print("\tData length:           {0} ({1})".format(primaryHeader['data_field_len'], coms.intToHex(primaryHeader['data_field_len'])))
@@ -67,7 +67,7 @@ if readbytes(filepos) == b'\x04':
 # CCSDS Time Stamp Header (type 5)
 if readbytes(filepos, 3) == b'\x05\x00\x0A':
     print("\n{2}[Type 5 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[5], coms.colours['OKGREEN'], coms.colours['ENDC']))
-    print("\tHeader length:         10")
+    print("\tHeader length:         10 (0xA)")  # Fixed length
 
     # CDS P Field
     pFieldBytes = readbytes(filepos + 3)
@@ -120,7 +120,7 @@ if readbytes(filepos, 3) == b'\x05\x00\x0A':
 # Key Header (type 7)
 if readbytes(filepos, 3) == b'\x07\x00\x07':
     print("\n{2}[Type 7 : Offset {0}] {1}:{3}".format("0x" + hex(filepos).upper()[2:], coms.headerTypes[7], coms.colours['OKGREEN'], coms.colours['ENDC']))
-    print("\tHeader length:         7")
+    print("\tHeader length:         7 (0x7)")  # Fixed length
 
     encKeyBytes = readbytes(filepos + 3, 4)
     encKeyInt = int.from_bytes(encKeyBytes, byteorder='big')
