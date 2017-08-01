@@ -10,7 +10,7 @@ import coms
 from datetime import datetime, timedelta
 
 argparser = argparse.ArgumentParser(description="Parses LRIT file and displays header information in a human-readable format.")
-argparser.add_argument('-f', action="store", dest="path", help="Input LRIT file")
+argparser.add_argument("path", action="store", help="Input LRIT file")
 args = argparser.parse_args()
 
 if args.path is None:
