@@ -15,7 +15,7 @@ argparser.add_argument("path", action="store", help="Input LRIT file")
 args = argparser.parse_args()
 
 if args.path is None:
-    print("No LRIT file provided. Use -f [PATH]\n")
+    print("No LRIT file provided.\n")
     exit(1)
 
 # Open file
