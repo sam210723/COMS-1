@@ -10,15 +10,15 @@ import coms
 from datetime import datetime, timedelta
 
 argparser = argparse.ArgumentParser(description="Parses LRIT file and displays header information in a human-readable format.")
-argparser.add_argument("path", action="store", help="Input LRIT file")
+argparser.add_argument("PATH", action="store", help="Input LRIT file")
 args = argparser.parse_args()
 
-if args.path is None:
+if args.PATH is None:
     print("No LRIT file provided.\n")
     exit(1)
 
 # Open file
-file = open(args.path, mode='rb')
+file = open(args.PATH, mode='rb')
 fileString = file.read()
 
 
@@ -148,7 +148,7 @@ if readbytes(filepos) == b'\x03':
     ddbBytes = readbytes(filepos + 3, dataFuncLengthInt - 3)
     ddbString = ddbBytes.decode()
 
-    ddbFileName = args.path[:-5] + "_IDF-DDB.txt"
+    ddbFileName = args.PATH[:-5] + "_IDF-DDB.txt"
     ddbFile = open(ddbFileName, 'w')
     ddbFile.write(ddbString)
     ddbFile.close()

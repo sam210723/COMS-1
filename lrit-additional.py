@@ -11,15 +11,15 @@ import coms
 from datetime import datetime, timedelta
 
 argparser = argparse.ArgumentParser(description="Extracts data from LRIT Additional Data (ADD) files. Data includes Alpha-numeric text (ANT), CMDPS (CT/CTT/CTH), and GOCI.")
-argparser.add_argument("path", action="store", help="Input LRIT file")
+argparser.add_argument("PATH", action="store", help="Input LRIT file")
 args = argparser.parse_args()
 
-if args.path is None:
+if args.PATH is None:
     print("No LRIT file provided.\n")
     exit(1)
 
 # Open file
-file = open(args.path, mode='rb')
+file = open(args.PATH, mode='rb')
 fileString = file.read()
 
 
@@ -143,7 +143,7 @@ elif primaryHeader['file_type'] == 128:  # CMDPS Data (CT, CTT, CTH)
 elif primaryHeader['file_type'] == 132 or primaryHeader['file_type'] == 130:  # GOCI (seems to have 2 file type codes)
     dumpExtension = "jpg"
 
-dumpFileName = args.path[:-5] + "_DATA.{0}".format(dumpExtension)
+dumpFileName = args.PATH[:-5] + "_DATA.{0}".format(dumpExtension)
 dumpFile = open(dumpFileName, 'wb')
 dumpFile.write(data)
 dumpFile.close()
