@@ -29,6 +29,8 @@ COMS.parseAnnotationTextHeader(True)
 
 COMS.parseTimestampHeader(True)
 
+COMS.parseAncillaryTextHeader(True)
+
 COMS.parseKeyHeader(True)
 
 COMS.parseImageSegmentationInformationHeader(True)
