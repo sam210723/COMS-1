@@ -102,3 +102,6 @@ ENV/
 
 # PyCharm
 .idea
+
+# Data Definition Block dump file
+*IDF-DDB.txt
