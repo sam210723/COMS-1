@@ -97,6 +97,7 @@ for lritFile in segments:
 print("{1}Image data dumped to \"{0}\"{2}".format(args.OUTPUT, COMS.colours['OKGREEN'], COMS.colours['ENDC']))
 
 if args.i or args.o or args.m:
+    # See GitHub Issue 1 for details
     bmpName = args.OUTPUT[:args.OUTPUT.index('.')] + ".bmp"
     binFile = open(args.OUTPUT, 'rb')
     z = np.fromfile(binFile, dtype=np.uint8, count=totalWidth * totalHeight)
@@ -107,7 +108,7 @@ if args.i or args.o or args.m:
     if args.o:  # Overlay flag
         overlayName = bmpName[:bmpName.index('.')] + "_overlay.bmp"
         channel = COMS.imageDataFunctionHeader['data_definition_block'][9:COMS.imageDataFunctionHeader['data_definition_block'].index("\n")]
-        leftText = "COMS-1 {0} - {1}".format(COMS.imageTypes[COMS.imageStructureHeader['image_type']], channel)
+        leftText = "COMS-1 LRIT {0} - {1}".format(COMS.imageTypes[COMS.imageStructureHeader['image_type']], channel)
         rightText = "{0} {1} UTC".format(COMS.timestampHeader['t_field_current_date'], COMS.timestampHeader['t_field_current_time'])
 
         if args.m:  # Map flag

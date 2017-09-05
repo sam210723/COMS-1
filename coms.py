@@ -130,7 +130,7 @@ class COMS:
 
     def parseImageStructureHeader(self, printInfo=False):
         """
-        Parses LRIT Image Structure header (type 1)
+        Parses xRIT Image Structure header (type 1)
         :param printInfo: Print info after parsing
         """
 
@@ -140,19 +140,42 @@ class COMS:
             self.imageStructureHeader['header_len'] = 9
             self.imageStructureHeader['header_offset'] = self.byteOffset
 
-            self.imageStructureHeader['bits_per_pixel'] = self.readbytes(3)  # Always 8bpp
+            self.imageStructureHeader['bits_per_pixel'] = self.readbytes(3)  # LRIT = 8 bits, HRIT = 16 bits
+
+            # Detect LRIT/HRIT using bpp
+            if int.from_bytes(self.imageStructureHeader['bits_per_pixel'], byteorder='big') == 8:
+                self.imageStructureHeader['is_lrit'] = 1
+            else:
+                self.imageStructureHeader['is_lrit'] = 0
+
             self.imageStructureHeader['num_cols'] = int.from_bytes(self.readbytes(4, 2), byteorder='big')
             self.imageStructureHeader['num_lines'] = int.from_bytes(self.readbytes(6, 2), byteorder='big')
 
             # Image type based on column and line count
-            if self.imageStructureHeader['num_cols'] == 2200 and self.imageStructureHeader['num_lines'] == 2200:
-                self.imageStructureHeader['image_type'] = 0  # FD
-            elif self.imageStructureHeader['num_cols'] == 1547 and (self.imageStructureHeader['num_lines'] == 308 or self.imageStructureHeader['num_lines'] == 309):
-                self.imageStructureHeader['image_type'] = 1  # ENH
-            elif self.imageStructureHeader['num_cols'] == 1547 and self.imageStructureHeader['num_lines'] == 318:
-                self.imageStructureHeader['image_type'] = 2  # LSH
-            elif self.imageStructureHeader['num_cols'] == 810 and self.imageStructureHeader['num_lines'] == 611:
-                self.imageStructureHeader['image_type'] = 3  # APNH
+            if self.imageStructureHeader['num_cols'] == 2200 and self.imageStructureHeader['num_lines'] == 220:  # LRIT FD
+                self.imageStructureHeader['image_type'] = 0
+            elif self.imageStructureHeader['num_cols'] == 1547 and (self.imageStructureHeader['num_lines'] == 308 or self.imageStructureHeader['num_lines'] == 309):  # LRIT ENH
+                self.imageStructureHeader['image_type'] = 1
+            elif self.imageStructureHeader['num_cols'] == 1547 and self.imageStructureHeader['num_lines'] == 318:  # LRIT LSH
+                self.imageStructureHeader['image_type'] = 2
+            elif self.imageStructureHeader['num_cols'] == 810 and self.imageStructureHeader['num_lines'] == 611:  # LRIT APNH
+                self.imageStructureHeader['image_type'] = 3
+            elif self.imageStructureHeader['num_cols'] == 11000 and self.imageStructureHeader['num_lines'] == 1100:  # HRIT FD VIS
+                self.imageStructureHeader['image_type'] = 0
+            elif self.imageStructureHeader['num_cols'] == 2750 and self.imageStructureHeader['num_lines'] == 275:  # HRIT FD IR
+                self.imageStructureHeader['image_type'] = 0
+            elif self.imageStructureHeader['num_cols'] == 7736 and self.imageStructureHeader['num_lines'] == 1544:  # HRIT ENH VIS
+                self.imageStructureHeader['image_type'] = 1
+            elif self.imageStructureHeader['num_cols'] == 1934 and self.imageStructureHeader['num_lines'] == 386:  # HRIT ENH IR
+                self.imageStructureHeader['image_type'] = 1
+            elif self.imageStructureHeader['num_cols'] == 7736 and self.imageStructureHeader['num_lines'] == 1592:  # HRIT LSH VIS
+                self.imageStructureHeader['image_type'] = 2
+            elif self.imageStructureHeader['num_cols'] == 1934 and self.imageStructureHeader['num_lines'] == 398:  # HRIT LSH IR
+                self.imageStructureHeader['image_type'] = 2
+            elif self.imageStructureHeader['num_cols'] == 4056 and self.imageStructureHeader['num_lines'] == 3060:  # HRIT APNH VIS
+                self.imageStructureHeader['image_type'] = 3
+            elif self.imageStructureHeader['num_cols'] == 1014 and self.imageStructureHeader['num_lines'] == 765:  # HRIT APNH IR
+                self.imageStructureHeader['image_type'] = 3
 
             self.imageStructureHeader['image_compression'] = int.from_bytes(self.readbytes(8), byteorder='big')
 
@@ -207,7 +230,7 @@ class COMS:
             self.imageDataFunctionHeader['header_offset'] = self.byteOffset
 
             self.imageDataFunctionHeader['data_definition_block'] = self.readbytes(3, self.imageDataFunctionHeader['header_len'] - 3).decode()
-            self.imageDataFunctionHeader['data_definition_block_filename'] = self.path[:str(self.path).index(".lrit")] + "_IDF-DDB.txt"
+            self.imageDataFunctionHeader['data_definition_block_filename'] = self.path[:-5] + "_IDF-DDB.txt"
 
             ddbFile = open(self.imageDataFunctionHeader['data_definition_block_filename'], 'w')
             ddbFile.write(self.imageDataFunctionHeader['data_definition_block'])
@@ -379,10 +402,7 @@ class COMS:
             self.setConsoleColour()
             print("\tHeader length:         {0} ({1})".format(self.imageStructureHeader['header_len'], self.intToHexStr(self.imageStructureHeader['header_len'])))
 
-            if int.from_bytes(self.imageStructureHeader['bits_per_pixel'], byteorder='big') != 8:
-                print("\tBits per pixel:        {0} {1}".format(str(int.from_bytes(self.imageStructureHeader['bits_per_pixel'], byteorder='big')), self.colours['WARNING'] + " WARNING: Should always be 8 for LRIT" + self.colours['ENDC']))
-            else:
-                print("\tBits per pixel:        {0}".format(int.from_bytes(self.imageStructureHeader['bits_per_pixel'], byteorder='big')))
+            print("\tBits per pixel:        {0}".format(int.from_bytes(self.imageStructureHeader['bits_per_pixel'], byteorder='big')))
 
             print("\tImage:                 {0}".format(self.imageTypes[self.imageStructureHeader['image_type']]))
             print("\t  - Columns: {0}".format(self.imageStructureHeader['num_cols']))

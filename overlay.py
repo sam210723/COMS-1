@@ -15,15 +15,14 @@ argparser.add_argument('LEFT', action="store", help="Left text")
 argparser.add_argument('RIGHT', action="store", help="Right text")
 argparser.add_argument('-m', action="store_true", help="Enable map overlay")
 argparser.add_argument('-f', action="store", help="Text fill colour", default="white")
+argparser.add_argument('-s', action="store", help="Text font size", default="32")
 args = argparser.parse_args()
 
 sourceImage = Image.open(args.INPUT)
 outputImage = Image.new(sourceImage.mode, (sourceImage.width, sourceImage.height + 50))
-
 outputImage.paste(sourceImage, (0, 0))
 draw = ImageDraw.Draw(outputImage)
-
-font = ImageFont.truetype("Arial.ttf", 32)
+font = ImageFont.truetype("Arial.ttf", int(args.s))
 
 textL = args.LEFT
 textR = args.RIGHT
