@@ -7,34 +7,112 @@ Extracts image data from LRIT IMG file.
 
 import argparse
 from coms import COMS as comsClass
+import glob
+from PIL import Image
+import numpy as np
+import os
+from subprocess import call
 
 argparser = argparse.ArgumentParser(description="Extracts Meteorological Imager data from LRIT Image (IMG) files.")
-argparser.add_argument("INPUT", action="store", help="Input LRIT file")
-argparser.add_argument('OUTPUT', action="store", help="Output path of BIN file")
+argparser.add_argument("INPUT", action="store", help="Input LRIT file/folder path")
+argparser.add_argument('OUTPUT', action="store", help="Output BIN file path")
+argparser.add_argument('-i', action="store_true", help="Generate BMP from BIN file")
+argparser.add_argument('-o', action="store_true", help="Add info text to generated BMP (assumes -i)")
+argparser.add_argument('-m', action="store_true", help="Add map overlay to generated BMP (assumes -i)")
+argparser.add_argument('-f', action="store", help="Overlay text fill colour", default="white")
 args = argparser.parse_args()
 
-# Create COMS class instance and load LRIT file
-COMS = comsClass(args.INPUT)
+segments = []  # List of IMG files
+totalWidth = 0
+totalHeight = 0
 
-# Primary Header (type 0, required)
-COMS.parsePrimaryHeader(True)
+if os.path.isdir(args.INPUT):  # If input is a directory
+    multipleSegments = True
+    print("Detecting IMG segments...")
 
-# START OPTIONAL HEADERS
-COMS.parseImageStructureHeader(True)
+    # Loop through files with .lrit extension in input folder
+    for file in glob.glob(args.INPUT + "/*.lrit"):
+        COMS = comsClass(file)
+        COMS.parsePrimaryHeader()
+        COMS.parseImageStructureHeader()
 
-COMS.parseImageNavigationHeader(True)
+        if COMS.primaryHeader['file_type'] == 0:  # Check LRIT file has IMG file type
+            segments.append(file)  # Add to list of valid IMG files
+            totalHeight += COMS.imageStructureHeader['num_lines']
+            totalWidth = COMS.imageStructureHeader['num_cols']
 
-COMS.parseImageDataFunctionHeader(True)
+    if segments.__len__() <= 0:
+        print("No valid IMG files found")
+        exit(1)
 
-COMS.parseAnnotationTextHeader(True)
+    print("Found {0} segments: ".format(segments.__len__()))
+    for segment in segments:  # List detected segments
+        print(" - {0}".format(segment))
 
-COMS.parseTimestampHeader(True)
+elif os.path.isfile(args.INPUT):  # If input is a single file
+    multipleSegments = False
+    COMS = comsClass(args.INPUT)
+    COMS.parsePrimaryHeader()
+    COMS.parseImageStructureHeader()
 
-COMS.parseKeyHeader(True)
+    if COMS.primaryHeader['file_type'] == 0:  # Check LRIT file has IMG file type
+        segments.append(args.INPUT)  # Add to list of valid IMG files
+        totalHeight += COMS.imageStructureHeader['num_lines']
+        totalWidth = COMS.imageStructureHeader['num_cols']
 
-COMS.parseImageSegmentationInformationHeader(True)
+print()
+# Delete output BIN file if it exists
+if os.path.isfile(args.OUTPUT):
+    os.remove(args.OUTPUT)
+    print("Deleted existing BIN file: {0}".format(args.OUTPUT))
 
-# BEGIN DATA DUMPING
-datFile = open(args.OUTPUT, "ab")
-datFile.write(COMS.readbytes(0+21, COMS.primaryHeader['data_field_len']))
-print("Image data dumped to \"{0}\"".format(args.OUTPUT))
+# Loop through each segment
+for lritFile in segments:
+    # Create COMS class instance and load LRIT file
+    COMS = comsClass(lritFile)
+
+    # Primary Header (type 0, required)
+    COMS.parsePrimaryHeader()
+
+    # START OPTIONAL HEADERS
+    printOptHeaders = False
+    COMS.parseImageStructureHeader(printOptHeaders)
+
+    COMS.parseImageNavigationHeader(printOptHeaders)
+
+    COMS.parseImageDataFunctionHeader(printOptHeaders)
+
+    COMS.parseAnnotationTextHeader(printOptHeaders)
+
+    COMS.parseTimestampHeader(printOptHeaders)
+
+    COMS.parseKeyHeader(printOptHeaders)
+
+    COMS.parseImageSegmentationInformationHeader(printOptHeaders)
+
+    # BEGIN DATA DUMPING
+    binFile = open(args.OUTPUT, "ab")
+    binFile.write(COMS.readbytes(0+21, COMS.primaryHeader['data_field_len']))  # Dump image bytes to binary BIN file
+
+print("{1}Image data dumped to \"{0}\"{2}".format(args.OUTPUT, COMS.colours['OKGREEN'], COMS.colours['ENDC']))
+
+if args.i or args.o or args.m:
+    bmpName = args.OUTPUT[:args.OUTPUT.index('.')] + ".bmp"
+    binFile = open(args.OUTPUT, 'rb')
+    z = np.fromfile(binFile, dtype=np.uint8, count=totalWidth * totalHeight)
+    img = Image.frombuffer("L", [totalWidth, totalHeight], z.astype('uint8'), 'raw', 'L', 0, 1)
+    img.save(bmpName)
+    print("{0}\nBMP image generated\n{1}".format(COMS.colours['OKGREEN'], COMS.colours['ENDC']))
+
+    if args.o:  # Overlay flag
+        overlayName = bmpName[:bmpName.index('.')] + "_overlay.bmp"
+        channel = COMS.imageDataFunctionHeader['data_definition_block'][9:COMS.imageDataFunctionHeader['data_definition_block'].index("\n")]
+        leftText = "COMS-1 {0} - {1}".format(COMS.imageTypes[COMS.imageStructureHeader['image_type']], channel)
+        rightText = "{0} {1} UTC".format(COMS.timestampHeader['t_field_current_date'], COMS.timestampHeader['t_field_current_time'])
+
+        if args.m:  # Map flag
+            call(["python3", "overlay.py", "-m", "-f", args.f, bmpName, overlayName, leftText, rightText])
+            print("Map overlay and info text added to BMP")
+        else:
+            call(["python3", "overlay.py", "-f", args.f, bmpName, overlayName, leftText, rightText])
+            print("{0}Info text added to BMP{1}".format(COMS.colours['OKGREEN'], COMS.colours['ENDC']))
