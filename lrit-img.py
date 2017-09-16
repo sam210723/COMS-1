@@ -90,9 +90,11 @@ for lritFile in segments:
 
     COMS.parseImageSegmentationInformationHeader(printOptHeaders)
 
+    COMS.parseImageObservationTimeHeader(printOptHeaders)
+
     # BEGIN DATA DUMPING
     binFile = open(args.OUTPUT, "ab")
-    binFile.write(COMS.readbytes(0+21, COMS.primaryHeader['data_field_len']))  # Dump image bytes to binary BIN file
+    binFile.write(COMS.readbytes(0, COMS.primaryHeader['data_field_len']))  # Dump image bytes to binary BIN file
 
 print("{1}Image data dumped to \"{0}\"{2}".format(args.OUTPUT, COMS.colours['OKGREEN'], COMS.colours['ENDC']))
 
