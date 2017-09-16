@@ -1,14 +1,15 @@
 from datetime import datetime, timedelta
+from jdcal import jd2gcal
 
 class COMS:
     """
     coms.py
     https://github.com/sam210723/coms-1
 
-    Variables and methods for COMS-1 LRIT parsing.
+    Variables and methods for COMS-1 xRIT parsing.
     """
 
-    # LRIT header types
+    # xRIT header types
     headerTypes = {}
     headerTypes[0] = "Primary Header"
     headerTypes[1] = "Image Structure Header"
@@ -16,21 +17,24 @@ class COMS:
     headerTypes[3] = "Image Data Function Header"
     headerTypes[4] = "Annotation Header"
     headerTypes[5] = "Time Stamp Header"
-    headerTypes[6] = "Ancillary Text Header"  # Not used in LRIT, future expansion
+    headerTypes[6] = "Ancillary Text Header"  # Not used in xRIT, future expansion
     headerTypes[7] = "Key Header"
     headerTypes[128] = "Image Segmentation Information Header"
-    headerTypes[129] = "Encryption Key Message Header"  # Not used in LRIT
+    headerTypes[129] = "Encryption Key Message Header"  # Not used in xRIT
+    headerTypes[130] = "Image Compensation Information Header"  # HRIT only
+    headerTypes[131] = "Image Observation Time Header"  # HRIT only
+    headerTypes[132] = "Image Quality Information Header"  # HRIT only
 
     # LRIT file types
     fileTypes = {}
     fileTypes[0] = "Image data (IMG)"
-    fileTypes[1] = "Global Telecommunication System (GTS) message"
+    fileTypes[1] = "Global Telecommunication System (GTS) message"  # LRIT only
     fileTypes[2] = "Alpha-numeric text (ANT)"
-    fileTypes[3] = "Encryption key message"  # Not used in LRIT
-    fileTypes[128] = "COMS Meteorological Data Processing System (CMDPS) analysis data"
-    fileTypes[129] = "Numerical Weather Prediction (NWP) data"
-    fileTypes[130] = "Geostationary Ocean Color Imager (GOCI) data"
-    fileTypes[131] = "KMA typhoon information"
+    fileTypes[3] = "Encryption key message"  # Not used in xRIT
+    fileTypes[128] = "COMS Meteorological Data Processing System (CMDPS) analysis data"  # LRIT only
+    fileTypes[129] = "Numerical Weather Prediction (NWP) data"  # LRIT only
+    fileTypes[130] = "Geostationary Ocean Color Imager (GOCI) data"  # LRIT only
+    fileTypes[131] = "KMA typhoon information"  # LRIT only
     fileTypes[132] = fileTypes[130]
 
     # LRIT image types
@@ -66,6 +70,9 @@ class COMS:
     ancillaryTextHeader = {}
     keyHeader = {}
     imageSegmentationInformationHeader = {}
+    imageCompensationInformationHeader = {}
+    imageObservationTimeHeader = {}
+    imageQualityInformationHeader = {}
 
     # Byte counter for tracking progress through file
     byteOffset = 0
@@ -74,9 +81,9 @@ class COMS:
     def __init__(self, path):
         self.path = path  # LRIT file path
 
-        # Load LRIT file
-        lritFile = open(self.path, mode="rb")
-        self.lritString = lritFile.read()
+        # Load xRIT file
+        xritFile = open(self.path, mode="rb")
+        self.xritString = xritFile.read()
 
 
     # Tool methods
@@ -87,7 +94,7 @@ class COMS:
         :param length: Number of bytes to return
         :return: Bytes  
         """
-        return self.lritString[self.byteOffset+offset:self.byteOffset+offset+length]
+        return self.xritString[self.byteOffset+offset:self.byteOffset+offset+length]
 
     def intToHexStr(self, int, fill=0):
         """
@@ -109,7 +116,7 @@ class COMS:
     # Header parsing methods
     def parsePrimaryHeader(self, printInfo=False):
         """
-        Parses LRIT Primary header (type 0, required)
+        Parses xRIT Primary header (type 0, required)
         :param printInfo: Print info after parsing
         """
 
@@ -187,7 +194,7 @@ class COMS:
 
     def parseImageNavigationHeader(self, printInfo=False):
         """
-        Parses LRIT Image Navigation header (type 2)
+        Parses xRIT Image Navigation header (type 2)
         :param printInfo: Print info after parsing
         """
 
@@ -219,7 +226,7 @@ class COMS:
 
     def parseImageDataFunctionHeader(self, printInfo=False):
         """
-        Parses LRIT Image Data Function header (type 3)
+        Parses xRIT Image Data Function header (type 3)
         :param printInfo: Print info after parsing
         """
 
@@ -242,7 +249,7 @@ class COMS:
 
     def parseAnnotationTextHeader(self, printInfo=False):
         """
-        Parses LRIT Annotation Text header (type 4)
+        Parses xRIT Annotation Text header (type 4)
         :param printInfo: Print info after parsing
         """
 
@@ -262,7 +269,7 @@ class COMS:
 
     def parseTimestampHeader(self, printInfo=False):
         """
-        Parses LRIT CCSDS Timestamp header (type 5)
+        Parses xRIT CCSDS Timestamp header (type 5)
         :param printInfo: Print info after parsing 
         """
 
@@ -318,8 +325,8 @@ class COMS:
 
     def parseAncillaryTextHeader(self, printInfo=False):
         """
-        Parses LRIT Ancillary Text header (type 6)
-        Header type unused. Allows for future LRIT expansion.
+        Parses xRIT Ancillary Text header (type 6)
+        Header type unused. Allows for future xRIT expansion.
         :param printInfo: Print info after parsing 
         """
 
@@ -336,6 +343,11 @@ class COMS:
             self.ancillaryTextHeader['valid'] = False
 
     def parseKeyHeader(self, printInfo=False):
+        """
+        Parses xRIT Key header (type 7)
+        Provides number of encryption key used.
+        :param printInfo: Print info after parsing.
+        """
         if self.readbytes(0, 3) == b'\x07\x00\x07':
             self.keyHeader['valid'] = True
             self.keyHeader['header_type'] = 7
@@ -351,6 +363,10 @@ class COMS:
             self.keyHeader['valid'] = False
 
     def parseImageSegmentationInformationHeader(self, printInfo=False):
+        """
+        Parses xRIT Image Segmentation Information header (type 128)
+        :param printInfo: Print info after parsing.
+        """
         if self.readbytes(0, 3) == b'\x80\x00\x07':
             self.imageSegmentationInformationHeader['valid'] = True
             self.imageSegmentationInformationHeader['header_type'] = 128
@@ -366,6 +382,63 @@ class COMS:
                 self.printImageSegmentationInformationHeader()
         else:
             self.imageSegmentationInformationHeader['valid'] = False
+
+    def parseImageCompensationInformationHeader(self, printInfo=False):
+        """
+        Parses HRIT Image Compensation Information header (type 130)
+        :param printInfo: Print info after parsing.
+        """
+        if self.readbytes(0) == b'\x82':
+            self.imageCompensationInformationHeader['valid'] = True
+            self.imageCompensationInformationHeader['header_type'] = 130
+            self.imageCompensationInformationHeader['header_len'] = int.from_bytes(self.readbytes(1, 2), byteorder='big')
+            self.imageCompensationInformationHeader['header_offset'] = self.byteOffset
+            self.imageCompensationInformationHeader['data'] = self.readbytes(3, self.imageCompensationInformationHeader['header_len']-3).decode().replace('\n', '\n\t')
+
+            self.byteOffset += self.imageCompensationInformationHeader['header_len']
+            if printInfo:
+                self.printImageCompensationInformationHeader()
+        else:
+            self.imageCompensationInformationHeader['valid'] = False
+
+    def parseImageObservationTimeHeader(self, printInfo=False):
+        """
+        Parses HRIT Image Observation Time header (type 131)
+        :param printInfo: Print info after parsing.
+        """
+
+        if self.readbytes(0) == b'\x83':
+            self.imageObservationTimeHeader['valid'] = True
+            self.imageObservationTimeHeader['header_type'] = 131
+            self.imageObservationTimeHeader['header_len'] = int.from_bytes(self.readbytes(1, 2), byteorder='big')
+            self.imageObservationTimeHeader['header_offset'] = self.byteOffset
+            self.imageObservationTimeHeader['mjd'] = self.readbytes(3, self.imageObservationTimeHeader['header_len']-3).decode()
+            self.imageObservationTimeHeader['date'] = jd2gcal(2400000.5, float(self.imageObservationTimeHeader['mjd']))
+
+            self.byteOffset += self.imageObservationTimeHeader['header_len']
+            if printInfo:
+                self.printImageObservationTimeHeader()
+        else:
+            self.imageObservationTimeHeader['valid'] = False
+
+    def parseImageQualityInformationHeader(self, printInfo=False):
+        """
+        Parses HRIT Image Quality Information header (type 132)
+        :param printInfo: Print info after parsing.
+        """
+
+        if self.readbytes(0) == b'\x84':
+            self.imageQualityInformationHeader['valid'] = True
+            self.imageQualityInformationHeader['header_type'] = 132
+            self.imageQualityInformationHeader['header_len'] = int.from_bytes(self.readbytes(1, 2), byteorder='big')
+            self.imageQualityInformationHeader['header_offset'] = self.byteOffset
+            self.imageQualityInformationHeader['quality'] = self.readbytes(3, self.imageQualityInformationHeader['header_len']-3).decode()
+
+            self.byteOffset += self.imageQualityInformationHeader['header_len']
+            if printInfo:
+                self.printImageQualityInformationHeader()
+        else:
+            self.imageQualityInformationHeader['valid'] = False
 
 
     # Header output methods
@@ -402,7 +475,7 @@ class COMS:
             self.setConsoleColour()
             print("\tHeader length:         {0} ({1})".format(self.imageStructureHeader['header_len'], self.intToHexStr(self.imageStructureHeader['header_len'])))
 
-            print("\tBits per pixel:        {0}".format(int.from_bytes(self.imageStructureHeader['bits_per_pixel'], byteorder='big')))
+            print("\tBits per pixel:        {0} ({1})".format(int.from_bytes(self.imageStructureHeader['bits_per_pixel'], byteorder='big'), self.intToHexStr(int.from_bytes(self.imageStructureHeader['bits_per_pixel'], byteorder='big'))))
 
             print("\tImage:                 {0}".format(self.imageTypes[self.imageStructureHeader['image_type']]))
             print("\t  - Columns: {0}".format(self.imageStructureHeader['num_cols']))
@@ -556,6 +629,68 @@ class COMS:
         else:
             self.setConsoleColour("FAIL")
             print("ERROR: {0} invalid\n".format(self.headerTypes[128]))
+            self.setConsoleColour()
+            print("Exiting...")
+            exit(1)
+
+    def printImageCompensationInformationHeader(self):
+        """
+        Output Image Compensation Information header details to the console
+        """
+
+        if self.imageCompensationInformationHeader['valid']:
+            self.setConsoleColour("OKGREEN")
+            print("[Type {0} : Offset {1}] {2}:".format(str(self.imageCompensationInformationHeader['header_type']).zfill(3), self.intToHexStr(self.imageCompensationInformationHeader['header_offset'], 4), self.headerTypes[130]))
+            self.setConsoleColour()
+            print("\tHeader length:         {0} ({1})".format(self.imageCompensationInformationHeader['header_len'], self.intToHexStr(self.imageCompensationInformationHeader['header_len'])))
+            print("\t{0}".format(self.imageCompensationInformationHeader['data']))
+
+            print()
+        else:
+            self.setConsoleColour("FAIL")
+            print("ERROR: {0} invalid\n".format(self.headerTypes[130]))
+            self.setConsoleColour()
+            print("Exiting...")
+            exit(1)
+
+    def printImageObservationTimeHeader(self):
+        """
+        Output Image Observation Time header details to the console
+        """
+
+        if self.imageObservationTimeHeader['valid']:
+            self.setConsoleColour("OKGREEN")
+            print("[Type {0} : Offset {1}] {2}:".format(str(self.imageObservationTimeHeader['header_type']).zfill(3), self.intToHexStr(self.imageObservationTimeHeader['header_offset'], 4), self.headerTypes[131]))
+            self.setConsoleColour()
+            print("\tHeader length:         {0} ({1})".format(self.imageObservationTimeHeader['header_len'], self.intToHexStr(self.imageObservationTimeHeader['header_len'])))
+            print("\tMJD:                   {0}".format(self.imageObservationTimeHeader['mjd']))
+            print("\tDate:                  {0}/{1}/{2}".format(str(self.imageObservationTimeHeader['date'][2]).zfill(2), str(self.imageObservationTimeHeader['date'][1]).zfill(2), self.imageObservationTimeHeader['date'][0]))
+            print("\tTime:                  {0}".format(str(self.imageObservationTimeHeader['date'][3])))
+
+            print()
+        else:
+            self.setConsoleColour("FAIL")
+            print("ERROR: {0} invalid\n".format(self.headerTypes[131]))
+            self.setConsoleColour()
+            print("Exiting...")
+            exit(1)
+
+    def printImageQualityInformationHeader(self):
+        """
+        Output Image Quality Information header details to the console
+        """
+
+        if self.imageQualityInformationHeader['valid']:
+            self.setConsoleColour("OKGREEN")
+            print("[Type {0} : Offset {1}] {2}:".format(str(self.imageQualityInformationHeader['header_type']).zfill(3), self.intToHexStr(self.imageQualityInformationHeader['header_offset'], 4), self.headerTypes[132]))
+            self.setConsoleColour()
+            print("\tHeader length:         {0} ({1})".format(self.imageQualityInformationHeader['header_len'], self.intToHexStr(self.imageQualityInformationHeader['header_len'])))
+            print("\tQuality:               {0}".format(self.imageQualityInformationHeader['quality']))
+
+            print()
+        else:
+            self.setConsoleColour("FAIL")
+            print("ERROR: {0} invalid\n".format(self.headerTypes[132]))
             self.setConsoleColour()
             print("Exiting...")
             exit(1)

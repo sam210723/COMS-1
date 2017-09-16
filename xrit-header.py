@@ -2,7 +2,7 @@
 lrit-header.py
 https://github.com/sam210723/coms-1
 
-Parses LRIT file and displays header information in a human-readable format.
+Parses xRIT file and displays header information in a human-readable format.
 """
 
 import argparse
@@ -34,3 +34,9 @@ COMS.parseAncillaryTextHeader(True)
 COMS.parseKeyHeader(True)
 
 COMS.parseImageSegmentationInformationHeader(True)
+
+COMS.parseImageCompensationInformationHeader(True)
+
+COMS.parseImageObservationTimeHeader(True)
+
+COMS.parseImageQualityInformationHeader(True)
