@@ -8,11 +8,11 @@ Parses xRIT file and displays header information in a human-readable format.
 import argparse
 from coms import COMS as comsClass
 
-argparser = argparse.ArgumentParser(description="Parses LRIT file and displays header information in a human-readable format.")
-argparser.add_argument("PATH", action="store", help="Input LRIT file")
+argparser = argparse.ArgumentParser(description="Parses xRIT file and displays header information in a human-readable format.")
+argparser.add_argument("PATH", action="store", help="Input xRIT file")
 args = argparser.parse_args()
 
-# Create COMS class instance and load LRIT file
+# Create COMS class instance and load xRIT file
 COMS = comsClass(args.PATH)
 
 # Primary Header (type 0, required)
