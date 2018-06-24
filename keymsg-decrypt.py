@@ -23,12 +23,7 @@ kmHeader = kmBytes[:headerLen]
 kmData = kmBytes[headerLen: headerLen + dataLen]
 kmCRC = kmBytes[-crcLen:]
 
-# Print field contents
-print("Header: {0}".format(kmHeader.hex().upper()))
-#print("Data: {0}".format(kmData.hex().upper()))
-print("CRC: {0}\n".format(kmCRC.hex().upper()))
-
-# Parse header
+# Parse application time header
 kmHeaderHex = kmHeader.hex()
 appYear = kmHeaderHex[0:4]
 appMonth = kmHeaderHex[4:6]
@@ -36,7 +31,46 @@ appDay = kmHeaderHex[6:8]
 appHour = kmHeaderHex[8:10]
 appMin = kmHeaderHex[10:12]
 appSec = str(round(int(kmHeaderHex[12:16])/1000))
-print("Application time: {0}/{1}/{2} {3}:{4}:{5}\n".format(appDay, appMonth, appYear, appHour, appMin, appSec.zfill(2)))
+print("Application Time header: 0x{0} ({1}/{2}/{3} {4}:{5}:{6})\n".format(kmHeader.hex().upper(), appDay, appMonth, appYear, appHour, appMin, appSec.zfill(2)))
+
+
+# Generate CRC LUT
+print("CRC16 Checksum: 0x{0}".format(kmCRC.hex().upper()))
+crcTable = []
+poly = 0x1021
+initial = 0xFFFF
+for i in range(256):
+    crc = 0
+    c = i << 8
+
+    for j in range(8):
+        if (crc ^ c) & 0x8000:
+            crc = (crc << 1) ^ poly
+        else:
+            crc = crc << 1
+
+        c = c << 1
+        crc = crc & 0xFFFF
+
+    crcTable.append(crc)
+
+# Print CRC table in hex
+#print('[{}]'.format(', '.join(hex(x) for x in crcTable)))
+
+# Calculate CRC16-CCITT-FALSE
+crcData = kmHeader + kmData
+crc = initial
+
+for i in range(len(crcData)):
+    lutPos = ((crc >> 8) ^ crcData[i]) & 0xFFFF
+    crc = ((crc << 8) ^ crcTable[lutPos]) & 0xFFFF
+
+print("Calculated CRC: 0x{0}".format(hex(crc)[2:].upper()))
+if int(crc) == int.from_bytes(kmCRC, byteorder='big'):
+    print("CRC Ok!\n")
+else:
+    print("CRC Error\n")
+    exit(0)
 
 # Loop through keys 18 bytes at a time
 indexes = []
