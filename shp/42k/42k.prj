@@ -1,0 +1,1 @@
+PROJCS["Geostationary_Satellite",GEOGCS["GCS_WGS_1984",DATUM["D_unknown",SPHEROID["WGS84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],PROJECTION["Geostationary_Satellite"],PARAMETER["central_meridian",128.2],PARAMETER["satellite_height",42142583],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1]]
