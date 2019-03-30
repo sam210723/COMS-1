@@ -8,6 +8,12 @@
             "type": "shell",
             "command": "python demux/lrit-demux.py",
             "problemMatcher": []
+        },
+        {
+            "label": "UDP Bridge",
+            "type": "shell",
+            "command": "python demux/udp-bridge.py 4999 5000",
+            "problemMatcher": []
         }
     ]
 }
