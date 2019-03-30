@@ -7,8 +7,10 @@ De-multiplexes LRIT downlink into LRIT files.
 
 import argparse
 import socket
+import sys
 
-from VCDU import parseVCDU
+from VCDU import *
+from MPDU import parseMPDU
 
 argparser = argparse.ArgumentParser(description="De-multiplexes LRIT downlink into LRIT files.")
 args = argparser.parse_args()
@@ -20,7 +22,9 @@ BUFFER_LEN = 892
 
 channelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#channelDump = open('demux/VCDU.bin', 'wb')
+
+# Globals
+lastVCID = None
 
 def init():
     print("COMS-1 LRIT Demuxer\n")
@@ -29,7 +33,7 @@ def init():
 
     startChannelClient()
     startStatsClient()
-    
+
     socketLoop()
 
 
@@ -38,14 +42,35 @@ def socketLoop():
     Handle incoming data from OSP decoder
     """
     
+    global lastVCID
+
     while True:
         channelData = channelClient.recv(BUFFER_LEN)
         statsData = statsClient.recv(BUFFER_LEN)
 
         # Unwrap VCDU into M_PDU
-        MPDU = parseVCDU(channelData)
+        SCID, VCID, COUNT, MPDU = parseVCDU(channelData)
+        
+        # Parse M_PDU of non-fill VCID
+        if VCID != 63:
+            # Detect change in VCID
+            if lastVCID != VCID:
+                print("\n\n[VCDU] VCID: {} ({})".format(getVCName(VCID), VCID))
+            lastVCID = VCID
+            
+            NEW, POINTER, FRAME = parseMPDU(MPDU)
 
-        #channelDump.write(MPDU)
+            # MPDU progress indicator
+            if NEW:
+                sys.stdout.write("|")
+            else:
+                sys.stdout.write(".")
+            sys.stdout.flush()
+
+            # Temporary dump to file
+            channelDump = open('demux/CPPDU.bin', 'wb')
+            channelDump.write(FRAME)
+            channelDump.close()
 
 
 def startChannelClient():
