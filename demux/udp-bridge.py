@@ -23,10 +23,8 @@ tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 def init():
-    print()
-    print("UDP Port: {}".format(args.UDP))
-    print("TCP Port: {}".format(args.TCP))
-    print()
+    print("UDP -> TCP Bridge")
+    print("{}:{} -> {}:{}\n".format(UDP_IP, UDP_PORT, TCP_IP, TCP_PORT))
 
     startUDP()
     startTCP()
@@ -35,6 +33,10 @@ def init():
 
 
 def startUDP():
+    """
+    Listen for UDP data on GRC symbol port
+    """
+
     print("Starting UDP...")
 
     try:
@@ -52,6 +54,10 @@ def startUDP():
 
 
 def startTCP():
+    """
+    Connect TCP socket to OSP decoder symbol port
+    """
+
     print("Starting TCP...")
 
     try:
@@ -69,7 +75,11 @@ def startTCP():
 
 
 def bridge():
-    print("Bridge connected\n")
+    """
+    Forward incoming UDP data to TCP socket
+    """
+
+    print("PORTS BRIDGED\n")
 
     while True:
         data, addr = udpSocket.recvfrom(1024)
