@@ -10,5 +10,7 @@ def getBits(data, start, length, count):
 
     dataInt = int.from_bytes(data, byteorder='big')
     dataBin = format(dataInt, '0' + str(count) + 'b')
+    end = start + length
+    bits = dataBin[start : end]
 
-    return dataBin[start : (start + length)]
+    return bits
