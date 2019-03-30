@@ -4,7 +4,7 @@ from jdcal import jd2gcal
 class COMS:
     """
     coms.py
-    https://github.com/sam210723/coms-1
+    https://github.com/sam210723/COMS-1
 
     Variables and methods for COMS-1 xRIT parsing.
     """

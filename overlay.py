@@ -1,6 +1,6 @@
 """
-lrit-img.py
-https://github.com/sam210723/coms-1
+overlay.py
+https://github.com/sam210723/COMS-1
 
 Adds overlays and text to COMS-1 Meteorological Imager images.
 """

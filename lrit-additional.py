@@ -1,6 +1,6 @@
 """
 lrit-additional.py
-https://github.com/sam210723/coms-1
+https://github.com/sam210723/COMS-1
 
 Extracts data from LRIT Additional Data (ADD) files.
 Data includes Alpha-numeric text (ANT), CMDPS (CT/CTT/CTH), and GOCI.

@@ -1,6 +1,6 @@
 """
-lrit-header.py
-https://github.com/sam210723/coms-1
+xrit-header.py
+https://github.com/sam210723/COMS-1
 
 Parses xRIT file and displays header information in a human-readable format.
 """

@@ -1,6 +1,6 @@
 """
 lrit-img.py
-https://github.com/sam210723/coms-1
+https://github.com/sam210723/COMS-1
 
 Extracts image data from LRIT IMG file.
 """

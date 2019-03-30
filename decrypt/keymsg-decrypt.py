@@ -1,8 +1,15 @@
+"""
+keymsg-decrypt.py
+https://github.com/sam210723/COMS-1
+
+Decrypts KMA Encryption Key Message files for COMS-1 xRIT decryption.
+"""
+
 import argparse
 import binascii
 import pyDes
 
-argparser = argparse.ArgumentParser(description="Decrypts KMA Encryption Key Message files for COMS-1 xRIT decryption")
+argparser = argparse.ArgumentParser(description="Decrypts KMA Encryption Key Message files for COMS-1 xRIT decryption.")
 argparser.add_argument("PATH", action="store", help="Encrypted Key Message file")
 argparser.add_argument("MAC", action="store", help="Ground Station MAC address")
 args = argparser.parse_args()
