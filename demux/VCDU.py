@@ -20,7 +20,7 @@ def parseVCDU(data):
     SC = getSCName(SCID)
     VC = getVCName(VCID)
 
-    print("[VCDU] {}\n SCID: {} ({})\n VCID: {} ({})\n".format(COUNT, SC, SCID, VC, VCID))
+    print("[VCDU] {}    SCID: {} ({})    VCID: {} ({})".format(COUNT, SC, SCID, VC, VCID))
 
     MPDU = data[6:]
     return SCID, VCID, COUNT, MPDU
