@@ -8,16 +8,19 @@ De-multiplexes LRIT downlink into LRIT files.
 import argparse
 import socket
 
+from VCDU import parseVCDU
+
 argparser = argparse.ArgumentParser(description="De-multiplexes LRIT downlink into LRIT files.")
 args = argparser.parse_args()
 
 TCP_IP = "127.0.0.1"
 CHANNEL_PORT = 5001
 STATS_PORT = 5002
+BUFFER_LEN = 892
 
 channelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+#channelDump = open('demux/VCDU.bin', 'wb')
 
 def init():
     print("COMS-1 LRIT Demuxer\n")
@@ -36,7 +39,13 @@ def socketLoop():
     """
     
     while True:
-        pass
+        channelData = channelClient.recv(BUFFER_LEN)
+        statsData = statsClient.recv(BUFFER_LEN)
+
+        # Unwrap VCDU into M_PDU
+        MPDU = parseVCDU(channelData)
+
+        #channelDump.write(MPDU)
 
 
 def startChannelClient():
@@ -80,5 +89,9 @@ def startStatsClient():
 
     print("STATISTICS OK\n")
 
-
-init()
+# Catch keyboard interrupt
+try:
+    init()
+except KeyboardInterrupt as e:
+    print("Exiting...")
+    exit()
