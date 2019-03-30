@@ -21,6 +21,19 @@ TCP_PORT = int(args.TCP)
 udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+
+def init():
+    print()
+    print("UDP Port: {}".format(args.UDP))
+    print("TCP Port: {}".format(args.TCP))
+    print()
+
+    startUDP()
+    startTCP()
+
+    bridge()
+
+
 def startUDP():
     print("Starting UDP...")
 
@@ -56,23 +69,21 @@ def startTCP():
 
 
 def bridge():
-    print("Bridge connected")
+    print("Bridge connected\n")
 
     while True:
         data, addr = udpSocket.recvfrom(1024)
-        tcpSocket.send(data)
+
+        try:
+            tcpSocket.send(data)
+        except socket.error as e:
+            if e.errno == 10054:
+                print("SOCKET CLOSED BY REMOTE")
+            else:
+                print(e)
         
-
-def init():
-    print()
-    print("UDP Port: {}".format(args.UDP))
-    print("TCP Port: {}".format(args.TCP))
-    print()
-
-    startUDP()
-    startTCP()
-
-    bridge()
+        print("Exiting...\n")
+        exit()   
     
 
 init()
