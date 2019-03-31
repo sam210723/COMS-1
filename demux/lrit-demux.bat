@@ -2,4 +2,4 @@
 title COMS-1 LRIT Demuxer
 
 cd ..
-python demux/lrit-demux.py
+python demux/lrit-demux.py ingest

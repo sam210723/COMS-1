@@ -1,3 +1,6 @@
+import errno
+import os
+
 def getBits(data, start, length, count):
     """
     Get bits from bytes
@@ -14,3 +17,19 @@ def getBits(data, start, length, count):
     bits = dataBin[start : end]
 
     return bits
+
+
+def newDirExists(path):
+    """
+    Create new directory if it doesn't exist already
+    :param path: Absolute directory path
+    """
+
+    if not os.path.isdir(path):
+        try:
+            os.mkdir(path)
+            return True
+        except OSError as e:
+            return e.errno
+    else:
+        return True

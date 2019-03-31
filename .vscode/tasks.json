@@ -6,7 +6,7 @@
         {
             "label": "LRIT Demux",
             "type": "shell",
-            "command": "python demux/lrit-demux.py",
+            "command": "python demux/lrit-demux.py ingest",
             "problemMatcher": []
         },
         {
