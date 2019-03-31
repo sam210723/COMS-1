@@ -8,7 +8,7 @@ Parses xRIT Virtual Channel Data Unit (VCDU) and returns the enclosed Multiplexi
 from tools import getBits
 
 def parseVCDU(data):
-    headerBytes = data[0:6]
+    headerBytes = data[:6]
     
     # Header Fields
     #VERS = int(getBits(headerBytes, 0, 2, 48), 2)          # VCID Version (always 0x01)
@@ -21,8 +21,6 @@ def parseVCDU(data):
     VC = getVCName(VCID)
 
     #print("[VCDU] {}    SCID: {} ({})    VCID: {} ({})".format(COUNT, SC, SCID, VC, VCID))
-
-    #TODO: Packet drop detection
 
     MPDU = data[6:]
     return SCID, VCID, COUNT, MPDU

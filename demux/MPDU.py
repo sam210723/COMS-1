@@ -8,16 +8,17 @@ Parses xRIT Multiplexing Protocol Data Unit (M_PDU) and returns part of a CCSDS 
 from tools import getBits
 
 def parseMPDU(data):
-    headerBytes = data[0:2]
+    headerBytes = data[:2]
 
     # Header Fields
-    #SPARE = getBits(headerBytes, 0, 5, 16)                 # Spare field (always b00000)
+    #SPARE = getBits(headerBytes, 0, 5, 16)                 # Spare Field (always b00000)
     POINTER = int(getBits(headerBytes, 5, 11, 16), 2)       # First Header Pointer
 
+    # Detect of M_PDU contains M_SDU header
     if POINTER != 2047:  # 0x07FF
-        NEW = True
+        HEADER = True
     else:
-        NEW = False
+        HEADER = False
 
     FRAME = data[2:]
-    return NEW, POINTER, FRAME
+    return HEADER, POINTER, FRAME

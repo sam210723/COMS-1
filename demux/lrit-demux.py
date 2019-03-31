@@ -12,6 +12,7 @@ import sys
 
 from VCDU import parseVCDU, getVCName
 from MPDU import parseMPDU
+from CPPDU import parseCPPDU
 from tools import getBits, newDirExists
 
 argparser = argparse.ArgumentParser(description="De-multiplexes LRIT downlink into LRIT files.")
@@ -27,12 +28,11 @@ BUFFER_LEN = 892
 DIR_ROOT = os.path.abspath(args.ROOT)
 DIR_TEMP = DIR_ROOT + "/temp"
 DIR_LRIT = DIR_ROOT + "/LRIT"
-DIR_IMG = DIR_LRIT + "/IMG"
-DIR_FD = DIR_IMG + "/FD"
-DIR_ENH = DIR_IMG + "/ENH"
-DIR_LSH = DIR_IMG + "/LSH"
+DIR_FD = DIR_LRIT + "/FD"
+DIR_ENH = DIR_LRIT + "/ENH"
+DIR_LSH = DIR_LRIT + "/LSH"
 DIR_ADD = DIR_LRIT + "/ADD"
-DIRS = [DIR_ROOT, DIR_TEMP, DIR_LRIT, DIR_IMG, DIR_FD, DIR_ENH, DIR_LSH, DIR_ADD]
+DIRS = [DIR_ROOT, DIR_TEMP, DIR_LRIT, DIR_FD, DIR_ENH, DIR_LSH, DIR_ADD]
 
 # TCP Clients
 channelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -40,6 +40,9 @@ statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Globals
 lastVCID = None
+lastVCIDCount = None
+currentCPPDU = None
+lastCPPDUCount = None
 
 def init():
     print("COMS-1 LRIT Demuxer\n")
@@ -62,34 +65,75 @@ def loop():
     """
     
     global lastVCID
+    global lastVCIDCount
+    global currentCPPDU
+    global lastCPPDUCount
 
     while True:
         channelData = channelClient.recv(BUFFER_LEN)
         statsData = statsClient.recv(BUFFER_LEN)
 
-        # Unwrap VCDU into M_PDU
+        ###--- VCDU ---###
+        # Parse VCDU header and return enclosed M_PDU
         SCID, VCID, COUNT, MPDU = parseVCDU(channelData)
         
-        # Parse M_PDU of non-fill VCID
-        if VCID != 63:
+        if VCID == 63:
+            # Discard fill packets
+            pass
+        else:
             # Detect change in VCID
-            if lastVCID != VCID:
-                print("\n\n[VCDU] VCID: {} ({})".format(getVCName(VCID), VCID))
-            lastVCID = VCID
-            
-            NEW, POINTER, FRAME = parseMPDU(MPDU)
-
-            # MPDU progress indicator
-            if NEW:
-                sys.stdout.write("|")
+            if VCID != lastVCID:
+                print("\n\n[VCDU]  {}  VCID: {}".format(getVCName(VCID), VCID))
             else:
-                sys.stdout.write(".")
-            sys.stdout.flush()
+                # Check VCDU counter continuity
+                if COUNT != (lastVCIDCount + 1):
+                    print("PACKET LOSS DETECTED")
 
-            # Temporary dump to file
-            channelDump = open('demux/CPPDU.bin', 'wb')
-            channelDump.write(FRAME)
-            channelDump.close()
+            lastVCID = VCID
+            lastVCIDCount = COUNT
+
+
+            ###--- M_PDU ---###
+            HEADER, POINTER, FRAME = parseMPDU(MPDU)
+
+            # If M_PDU contains new CP_PDU header
+            if HEADER:
+                # Parse CP_PDU header and return CP_PDU chunks before and after header
+                APID, SEQ, COUNT, PRECHUNK, POSTCHUNK = parseCPPDU(FRAME, POINTER)
+
+                # Check CP_PDU counter continuity
+                #TODO: FIX
+                if SEQ == "START":
+                    lastCPPDUCount = COUNT
+                else:
+                    if lastCPPDUCount != None:
+                        if COUNT != (lastCPPDUCount + 1):
+                            print("PACKET LOSS DETECTED")
+                lastCPPDUCount = COUNT
+
+                # Handle completed CP_PDU
+                if POINTER != 0 and currentCPPDU != None:
+                    # Append data from previous CP_PDU before header of next CP_PDU
+                    currentCPPDU += PRECHUNK
+
+                    print(len(currentCPPDU))
+                    
+                    # Trim CRC from end of CP_PDU
+                    currentCRC = currentCPPDU[-2:]
+                    currentCPPDU = currentCPPDU[:-2]
+
+                    ###--- CP_PDU ---###
+                    #TODO: CP_PDU CRC Check
+                        #TODO: Append CP_PDU to TP_File
+                        #TODO: Extract S_PDU from TP_File
+                        #TODO: Decrypt S_PDU into xRIT File
+
+                # Start new CP_PDU
+                currentCPPDU = POSTCHUNK
+            else:
+                # If no CP_PDU header present, append bytes to current CP_PDU
+                if currentCPPDU != None:
+                    currentCPPDU += FRAME
 
 
 def configDirs():
