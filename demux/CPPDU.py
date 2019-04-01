@@ -34,3 +34,56 @@ def parseCPPDU(data, offset):
     POSTCHUNK = data[offset + 6:]       # Data after CP_PDU header
     
     return APID, SEQ, COUNT, PRECHUNK, POSTCHUNK
+
+
+def checkCRC(data, txCRC, lut):
+    """
+    Calculate CRC-16/CCITT-FALSE 
+    """
+
+    print("Transmitted CRC: {}".format(hex(int.from_bytes(txCRC, byteorder='big'))))
+
+    print(lut)
+
+    initial = 0xFFFF
+    crc = initial
+
+    # Calculate CRC
+    for i in range(len(data)):
+        lutPos = ((crc >> 8) ^ data[i]) & 0xFFFF
+        crc = ((crc << 8) ^ lut[lutPos]) & 0xFFFF
+
+    print("Calculated CRC: 0x{0}".format(hex(crc)[2:].upper()))
+    
+    # Compare CRC from CP_PDU and calculated CRC
+    if int(crc) == int.from_bytes(txCRC, byteorder='big'):
+        return True
+    else:
+        return False
+
+
+
+def genCRCLUT():
+    """
+    Creates Lookup Table for CRC-16/CCITT-FALSE calculation
+    """
+
+    crcTable = []
+    poly = 0x1021
+    initial = 0xFFFF
+    for i in range(256):
+        crc = 0
+        c = i << 8
+
+        for j in range(8):
+            if (crc ^ c) & 0x8000:
+                crc = (crc << 1) ^ poly
+            else:
+                crc = crc << 1
+
+            c = c << 1
+            crc = crc & 0xFFFF
+
+        crcTable.append(crc)
+    
+    return crcTable

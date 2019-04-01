@@ -12,7 +12,7 @@ import sys
 
 from VCDU import parseVCDU, getVCName
 from MPDU import parseMPDU
-from CPPDU import parseCPPDU
+from CPPDU import parseCPPDU, genCRCLUT, checkCRC
 from tools import getBits, newDirExists
 
 argparser = argparse.ArgumentParser(description="De-multiplexes LRIT downlink into LRIT files.")
@@ -43,6 +43,7 @@ lastVCID = None
 lastVCIDCount = None
 currentCPPDU = None
 lastCPPDUCount = None
+crcLUT = None
 
 def init():
     print("COMS-1 LRIT Demuxer\n")
@@ -54,6 +55,10 @@ def init():
     # Start TCP clients
     startChannelClient()
     startStatsClient()
+
+    # Generate CP_PDU CRC LUT
+    global crcLUT
+    crcLUT = genCRCLUT()
 
     # Main loop
     loop()
@@ -68,6 +73,8 @@ def loop():
     global lastVCIDCount
     global currentCPPDU
     global lastCPPDUCount
+    global crcLUT
+    print(crcLUT)
 
     while True:
         channelData = channelClient.recv(BUFFER_LEN)
@@ -101,15 +108,14 @@ def loop():
                 # Parse CP_PDU header and return CP_PDU chunks before and after header
                 APID, SEQ, COUNT, PRECHUNK, POSTCHUNK = parseCPPDU(FRAME, POINTER)
 
-                # Check CP_PDU counter continuity
-                #TODO: FIX
-                if SEQ == "START":
-                    lastCPPDUCount = COUNT
-                else:
-                    if lastCPPDUCount != None:
-                        if COUNT != (lastCPPDUCount + 1):
-                            print("PACKET LOSS DETECTED")
-                lastCPPDUCount = COUNT
+                #TODO: Check CP_PDU counter continuity
+                #if SEQ == "START":
+                    #lastCPPDUCount = COUNT
+                #else:
+                    #if lastCPPDUCount != None:
+                        #if COUNT != (lastCPPDUCount + 1):
+                            #print("PACKET LOSS DETECTED")
+                #lastCPPDUCount = COUNT
 
                 # Handle completed CP_PDU
                 if POINTER != 0 and currentCPPDU != None:
@@ -123,10 +129,13 @@ def loop():
                     currentCPPDU = currentCPPDU[:-2]
 
                     ###--- CP_PDU ---###
-                    #TODO: CP_PDU CRC Check
-                        #TODO: Append CP_PDU to TP_File
-                        #TODO: Extract S_PDU from TP_File
-                        #TODO: Decrypt S_PDU into xRIT File
+                    if not checkCRC(currentCPPDU, currentCRC, crcLUT):
+                        print("CP_PDU CRC ERROR!")
+
+
+                    #TODO: Append CP_PDU to TP_File
+                    #TODO: Extract S_PDU from TP_File
+                    #TODO: Decrypt S_PDU into xRIT File
 
                 # Start new CP_PDU
                 currentCPPDU = POSTCHUNK
