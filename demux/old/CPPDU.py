@@ -41,10 +41,6 @@ def checkCRC(data, txCRC, lut):
     Calculate CRC-16/CCITT-FALSE 
     """
 
-    print("Transmitted CRC: {}".format(hex(int.from_bytes(txCRC, byteorder='big'))))
-
-    print(lut)
-
     initial = 0xFFFF
     crc = initial
 
@@ -52,8 +48,6 @@ def checkCRC(data, txCRC, lut):
     for i in range(len(data)):
         lutPos = ((crc >> 8) ^ data[i]) & 0xFFFF
         crc = ((crc << 8) ^ lut[lutPos]) & 0xFFFF
-
-    print("Calculated CRC: 0x{0}".format(hex(crc)[2:].upper()))
     
     # Compare CRC from CP_PDU and calculated CRC
     if int(crc) == int.from_bytes(txCRC, byteorder='big'):
