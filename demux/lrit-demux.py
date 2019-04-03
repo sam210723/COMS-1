@@ -7,9 +7,7 @@ De-multiplexes LRIT downlink into LRIT files.
 
 import argparse
 import os
-import shutil
 import socket
-import sys
 
 from tools import getBits, newDirExists
 
@@ -41,11 +39,11 @@ def init():
     print("Virtual Channel Port: {}".format(CHANNEL_PORT))
     print("Statistics Port: {}\n".format(STATS_PORT))
 
-    configDirs()
+    config_dirs()
 
     # Start TCP clients
-    startChannelClient()
-    startStatsClient()
+    start_channel_client()
+    start_stats_client()
 
     # Main loop
     loop()
@@ -61,7 +59,7 @@ def loop():
         #statsData = statsClient.recv(BUFFER_LEN)
 
 
-def configDirs():
+def config_dirs():
     """
     Create required directory structure
     """
@@ -77,7 +75,7 @@ def configDirs():
     print()
 
 
-def startChannelClient():
+def start_channel_client():
     """
     Connect TCP socket to OSP decoder virtual channel port
     """
@@ -98,7 +96,7 @@ def startChannelClient():
     print("CHANNEL OK\n")
 
 
-def startStatsClient():
+def start_stats_client():
     """
     Connect TCP socket to OSP decoder statistics port
     """
