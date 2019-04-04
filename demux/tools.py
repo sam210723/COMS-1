@@ -1,7 +1,7 @@
 import errno
 import os
 
-def getBits(data, start, length, count):
+def get_bits(data, start, length, count):
     """
     Get bits from bytes
 
@@ -19,7 +19,7 @@ def getBits(data, start, length, count):
     return bits
 
 
-def newDirExists(path):
+def new_dir_exists(path):
     """
     Create new directory if it doesn't exist already
     :param path: Absolute directory path
