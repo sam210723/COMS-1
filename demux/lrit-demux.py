@@ -9,7 +9,9 @@ import argparse
 import os
 import socket
 
-from tools import getBits, newDirExists
+from demuxer import Demuxer
+#from statistics import Statistics
+from tools import get_bits, new_dir_exists
 
 argparser = argparse.ArgumentParser(description="De-multiplexes LRIT downlink into LRIT files.")
 argparser.add_argument("ROOT", action="store", help="LRIT file directory")
@@ -33,6 +35,9 @@ DIRS = [DIR_ROOT, DIR_TEMP, DIR_LRIT, DIR_FD, DIR_ENH, DIR_LSH, DIR_ADD]
 # TCP Clients
 channelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+demux = Demuxer("LRIT")
+
 
 def init():
     print("COMS-1 LRIT Demuxer\n")
@@ -58,6 +63,9 @@ def loop():
         channelData = channelClient.recv(BUFFER_LEN)
         #statsData = statsClient.recv(BUFFER_LEN)
 
+        demux.data_in(channelData)
+        #stats.data_in(statsData)
+
 
 def config_dirs():
     """
@@ -67,7 +75,7 @@ def config_dirs():
     print(DIR_ROOT)
     
     for DIR in DIRS:
-        if newDirExists(DIR) != True:
+        if new_dir_exists(DIR) != True:
             print("Error creating directories")
             print("Exiting...")
             exit()
