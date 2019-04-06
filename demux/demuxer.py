@@ -6,6 +6,7 @@ Coordinates CCSDS demuxing from VCDU layer to xRIT file layer.
 """
 
 from VCDU import VCDU
+from MPDU import MPDU
 
 class Demuxer:
     
@@ -21,3 +22,5 @@ class Demuxer:
     def data_in(self, data):
         # Parse VCDU
         currentVCDU = VCDU(data)
+
+        currentMPDU = MPDU(currentVCDU.MPDU)
