@@ -19,12 +19,12 @@ class VCDU:
         header = self.data[:6]
 
         # Header fields
-        self.VER = get_bits_int(header, 0, 2, 48)
-        self.SCID = get_bits_int(header, 2, 8, 48)
-        self.VCID = get_bits_int(header, 10, 6, 48)
-        self.COUNT = get_bits_int(header, 16, 24, 48)
-        self.REPLAY = get_bits_int(header, 40, 1, 48)
-        self.SPARE = get_bits_int(header, 41, 7, 48)
+        self.VER = get_bits_int(header, 0, 2, 48)          # Virtual Channel Version
+        self.SCID = get_bits_int(header, 2, 8, 48)         # Spacecraft ID
+        self.VCID = get_bits_int(header, 10, 6, 48)        # Virtual Channel ID
+        self.COUNT = get_bits_int(header, 16, 24, 48)      # VCDU Counter
+        self.REPLAY = get_bits_int(header, 40, 1, 48)      # Replay Flag
+        self.SPARE = get_bits_int(header, 41, 7, 48)       # Spare (always b0000000)
 
         self.get_SC_name()
         self.get_VC_name()
