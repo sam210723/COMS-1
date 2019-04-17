@@ -640,7 +640,7 @@
     </param>
     <param>
       <key>port</key>
-      <value>5000</value>
+      <value>4999</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -723,7 +723,7 @@
     </param>
     <param>
       <key>repeat</key>
-      <value>False</value>
+      <value>True</value>
     </param>
   </block>
   <block>
