@@ -50,6 +50,9 @@ def init():
     start_channel_client()
     start_stats_client()
 
+    print("─────────────────────────────────────────────────────────")
+    print("Waiting for Virtual Channel to change...")
+
     # Main loop
     loop()
 
