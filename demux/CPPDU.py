@@ -26,7 +26,7 @@ class CPPDU:
         self.APID = get_bits_int(header, 5, 11, 48)          # Application Process ID
         self.SEQ = get_bits_int(header, 16, 2, 48)           # Sequence Flag
         self.COUNTER = get_bits_int(header, 18, 14, 48)      # Packet Sequence Counter
-        self.LENGTH = get_bits_int(header, 32, 16, 48)       # Packet Length
+        self.LENGTH = get_bits_int(header, 32, 16, 48) + 1   # Packet Length
 
         if self.SEQ == 0:
             self.SEQ = "CONTINUE"
@@ -57,7 +57,7 @@ class CPPDU:
         self.fullCPPDU += data
 
 
-    def getData(self):
+    def get_data(self):
         """
         Returns full CP_PDU without trailing CRC bytes (max 8190 bytes)
         """
@@ -65,14 +65,14 @@ class CPPDU:
         return self.fullCPPDU[:-2]
 
 
-    def checkCRC(self, lut):
+    def check_CRC(self, lut):
         """
         Calculate CRC-16/CCITT-FALSE 
         """
 
         initial = 0xFFFF
         crc = initial
-        data = self.getData()
+        data = self.get_data()
         txCRC = self.fullCPPDU[-2:]
 
         # Calculate CRC
@@ -87,7 +87,7 @@ class CPPDU:
             return False
 
 
-    def genCRCLUT(self):
+    def gen_CRC_LUT(self):
         """
         Creates Lookup Table for CRC-16/CCITT-FALSE calculation
         """
@@ -113,7 +113,7 @@ class CPPDU:
         return crcTable
     
 
-    def isEOFMarker(self):
+    def is_EOF_marker(self):
         """
         Checks if CP_PDU is the "EOF marker" CP_PDU of a TP_File.
 
@@ -125,7 +125,7 @@ class CPPDU:
         This can be used to trigger processing of a completed TP_File, hence "EOF marker".
         """
 
-        if self.COUNTER == 0 and self.APID == 0 and self.LENGTH == 0 and self.SEQ == "CONTINUE":
+        if self.COUNTER == 0 and self.APID == 0 and self.LENGTH == 1 and self.SEQ == "CONTINUE":
             return True
         else:
             return False

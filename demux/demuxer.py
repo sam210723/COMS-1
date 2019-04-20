@@ -24,7 +24,7 @@ class Demuxer:
         self.seenVCDUChange = False
 
         # Generate CP_PDU CRC table once rather than on every CRC check
-        self.crcTable = CPPDU(b'', 0).genCRCLUT()
+        self.crcTable = CPPDU(b'', 0).gen_CRC_LUT()
 
 
     def data_in(self, data):
@@ -61,7 +61,7 @@ class Demuxer:
 
             # Show VCID change
             #TODO: In-class print methods
-            print("\n[VCID] {}: {}".format(currentVCDU.VCID, currentVCDU.VC))
+            print("\n\n[VCID] {}: {}".format(currentVCDU.VCID, currentVCDU.VC))
 
         if currentVCDU.VCID == 63:
             # Discard fill packets
@@ -76,23 +76,26 @@ class Demuxer:
 
         # Current MPDU contains a CP_PDU header
         if self.currentMPDU.HEADER:
-            self.handleCPPDUHeader()
+            self.handle_CPPDU_header()
 
         # No CP_PDU header present in current MPDU
         else:
-            #try:
-                #self.currentCPPDU
-            #except AttributeError:
-                #return
+            #TODO: Find cause of AttibuteError
+            try:
+                self.currentCPPDU
+            except AttributeError as e:
+                print(e)
+                return
             
             # Append MPDU data field to current CP_PDU
             self.currentCPPDU.append(self.currentMPDU.FRAME)
-        
+            print(".", end='')
+
         # Flush output buffer
         sys.stdout.flush()
 
 
-    def handleCPPDUHeader(self):
+    def handle_CPPDU_header(self):
         """
         Handles CP_PDU headers
         """
@@ -107,22 +110,29 @@ class Demuxer:
 
             #TODO: Open new TP_File
 
-            #TODO: In-class print methods
-            print("  [CP_PDU] APID: {}, {}, #{}, LEN: {}, PRE: {}, POST {}".format(self.currentCPPDU.APID, self.currentCPPDU.SEQ, self.currentCPPDU.COUNTER, self.currentCPPDU.LENGTH + 1, len(self.currentCPPDU.PRE_HEADER_DATA), len(self.currentCPPDU.POST_HEADER_DATA)))
-
         # If data precedes CP_PDU header (last or middle CP_PDUs in TP_File)
         else:
             # Detect special EOF marker CP_PDU after last CP_PDU in TP_File
-            if CPPDU(self.currentMPDU.FRAME, self.currentMPDU.POINTER).isEOFMarker():
+            if CPPDU(self.currentMPDU.FRAME, self.currentMPDU.POINTER).is_EOF_marker():
 
                 # CP_PDU CRC
-                if self.currentCPPDU.checkCRC(self.crcTable):
-                    print("    CRC OK")
+                if self.currentCPPDU.check_CRC(self.crcTable):
+                    print("\n    CRC:           OK")
                 else:
-                    print("    CRC ERROR")
-                    return
+                    print("\n    CRC:           ERROR")
+                
+                # CP_PDU length check
+                if self.currentCPPDU.LENGTH == len(self.currentCPPDU.fullCPPDU):
+                    print("    LENGTH:        OK")
+                else:
+                    ex = self.currentCPPDU.LENGTH
+                    ac = len(self.currentCPPDU.fullCPPDU)
+                    diff = ac - ex
+                    print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
 
                 #TODO: Close current TP_File
+
+                return
             
             # CP_PDU Sequence Flags CONTINUE and LAST
             else:
@@ -133,19 +143,30 @@ class Demuxer:
                 self.currentCPPDU.append(nextCPPDU.PRE_HEADER_DATA)
 
                 # CP_PDU CRC
-                if self.currentCPPDU.checkCRC(self.crcTable):
-                    print("    CRC OK")
+                if self.currentCPPDU.check_CRC(self.crcTable):
+                    print("\n    CRC:           OK")
                 else:
-                    print("    CRC ERROR")
+                    print("\n    CRC:           ERROR")
 
+                # CP_PDU continuity check
                 if self.currentCPPDU.COUNTER == (nextCPPDU.COUNTER - 1):
-                    print("    CONTINUITY OK")
+                    print("    CONTINUITY:    OK")
                 else:
-                    print("    CONTINUITY ERROR")
+                    print("    CONTINUITY:    ERROR")
+                
+                # CP_PDU length check
+                if self.currentCPPDU.LENGTH == len(self.currentCPPDU.fullCPPDU):
+                    print("    LENGTH:        OK")
+                else:
+                    ex = self.currentCPPDU.LENGTH
+                    ac = len(self.currentCPPDU.fullCPPDU)
+                    diff = ac - ex
+                    print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
 
-            # Add data from MPDU to new CP_PDU
-            self.currentCPPDU = nextCPPDU
-            self.currentCPPDU.start(self.currentCPPDU.POST_HEADER_DATA)
+                # Add data from MPDU to new CP_PDU
+                self.currentCPPDU = nextCPPDU
+                self.currentCPPDU.start(self.currentCPPDU.POST_HEADER_DATA)
 
-            #TODO: In-class print methods
-            print("  [CP_PDU] APID: {}, {}, #{}, LEN: {}, PRE: {}, POST: {}".format(self.currentCPPDU.APID, self.currentCPPDU.SEQ, self.currentCPPDU.COUNTER, self.currentCPPDU.LENGTH + 1, len(self.currentCPPDU.PRE_HEADER_DATA), len(self.currentCPPDU.POST_HEADER_DATA)))
+        #TODO: In-class print methods
+        print("  [CP_PDU] APID: {}, {}, #{}, LEN: {}, PRE: {}, POST: {}".format(self.currentCPPDU.APID, self.currentCPPDU.SEQ, self.currentCPPDU.COUNTER, self.currentCPPDU.LENGTH, len(self.currentCPPDU.PRE_HEADER_DATA), len(self.currentCPPDU.POST_HEADER_DATA)))
+        print("    .", end='')
