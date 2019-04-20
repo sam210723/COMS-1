@@ -42,14 +42,28 @@ class CPPDU:
     
     
     def start(self, data):
+        """
+        Creates full CP_PDU data block for data to be appended to
+        """
+
         self.fullCPPDU = data
     
 
     def append(self, data):
+        """
+        Appends data to full CP_PDU data block
+        """
+
         self.fullCPPDU += data
 
+
     def getData(self):
+        """
+        Returns full CP_PDU without trailing CRC bytes (max 8190 bytes)
+        """
+
         return self.fullCPPDU[:-2]
+
 
     def checkCRC(self, lut):
         """
@@ -97,3 +111,21 @@ class CPPDU:
             crcTable.append(crc)
 
         return crcTable
+    
+
+    def isEOFMarker(self):
+        """
+        Checks if CP_PDU is the "EOF marker" CP_PDU of a TP_File.
+
+        After a CP_PDU with the Sequence Flag of LAST, an extra CP_PDU is sent with the following:
+            APID: 0
+            Counter: 0
+            Sequence Flag: CONTINUE (0)
+            Length: 0
+        This can be used to trigger processing of a completed TP_File, hence "EOF marker".
+        """
+
+        if self.COUNTER == 0 and self.APID == 0 and self.LENGTH == 0 and self.SEQ == "CONTINUE":
+            return True
+        else:
+            return False

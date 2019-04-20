@@ -22,7 +22,7 @@ class MPDU:
         self.SPARE = get_bits(header, 0, 5, 16)             # Spare Field (always b00000)
         self.POINTER = get_bits_int(header, 5, 11, 16)      # First Pointer Header
 
-        # Detect of M_PDU contains M_SDU header
+        # Detect if M_PDU contains CP_PDU header
         if self.POINTER != 2047:  # 0x07FF
             self.HEADER = True
         else:
