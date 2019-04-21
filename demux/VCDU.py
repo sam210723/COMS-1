@@ -73,6 +73,6 @@ class VCDU:
         elif self.VCID == 11:
             self.VC = "TYPHOON"
         elif self.VCID == 63:
-            self.VC = "Fill"
+            self.VC = "FILL"
         else:
             self.VC = None

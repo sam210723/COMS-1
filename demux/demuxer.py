@@ -114,6 +114,8 @@ class Demuxer:
         else:
             # Detect special EOF marker CP_PDU after last CP_PDU in TP_File
             if CPPDU(self.currentMPDU.FRAME, self.currentMPDU.POINTER).is_EOF_marker():
+                # Append final bytes of current CP_PDU from current MPDU before EOF marker CP_PDU header
+                self.currentCPPDU.append(self.currentMPDU.FRAME[:self.currentMPDU.POINTER])
 
                 # CP_PDU CRC
                 if self.currentCPPDU.check_CRC(self.crcTable):
@@ -136,8 +138,9 @@ class Demuxer:
             
             # CP_PDU Sequence Flags CONTINUE and LAST
             else:
-                # Parse new CP_PDU header
-                nextCPPDU = CPPDU(self.currentMPDU.FRAME, self.currentMPDU.POINTER)
+                if self.currentCPPDU.SEQ != "LAST":
+                    # Parse new CP_PDU header
+                    nextCPPDU = CPPDU(self.currentMPDU.FRAME, self.currentMPDU.POINTER)
 
                 # Append data from current CP_PDU before header of next CP_PDU
                 self.currentCPPDU.append(nextCPPDU.PRE_HEADER_DATA)
@@ -163,9 +166,10 @@ class Demuxer:
                     diff = ac - ex
                     print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
 
-                # Add data from MPDU to new CP_PDU
-                self.currentCPPDU = nextCPPDU
-                self.currentCPPDU.start(self.currentCPPDU.POST_HEADER_DATA)
+                if self.currentCPPDU.SEQ != "LAST":
+                    # Add data from MPDU to new CP_PDU
+                    self.currentCPPDU = nextCPPDU
+                    self.currentCPPDU.start(self.currentCPPDU.POST_HEADER_DATA)
 
         #TODO: In-class print methods
         print("  [CP_PDU] APID: {}, {}, #{}, LEN: {}, PRE: {}, POST: {}".format(self.currentCPPDU.APID, self.currentCPPDU.SEQ, self.currentCPPDU.COUNTER, self.currentCPPDU.LENGTH, len(self.currentCPPDU.PRE_HEADER_DATA), len(self.currentCPPDU.POST_HEADER_DATA)))
