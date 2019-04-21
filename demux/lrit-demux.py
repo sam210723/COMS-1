@@ -24,19 +24,19 @@ BUFFER_LEN = 892
 
 # Directory structure
 DIR_ROOT = os.path.abspath(args.ROOT)
-DIR_TEMP = DIR_ROOT + "/temp"
-DIR_LRIT = DIR_ROOT + "/LRIT"
-DIR_FD = DIR_LRIT + "/FD"
-DIR_ENH = DIR_LRIT + "/ENH"
-DIR_LSH = DIR_LRIT + "/LSH"
-DIR_ADD = DIR_LRIT + "/ADD"
+DIR_TEMP = DIR_ROOT + "\\temp"
+DIR_LRIT = DIR_ROOT + "\\LRIT"
+DIR_FD = DIR_LRIT + "\\FD"
+DIR_ENH = DIR_LRIT + "\\ENH"
+DIR_LSH = DIR_LRIT + "\\LSH"
+DIR_ADD = DIR_LRIT + "\\ADD"
 DIRS = [DIR_ROOT, DIR_TEMP, DIR_LRIT, DIR_FD, DIR_ENH, DIR_LSH, DIR_ADD]
 
 # TCP Clients
 channelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-demux = Demuxer("LRIT")
+demux = Demuxer("LRIT", DIRS)
 
 
 def init():

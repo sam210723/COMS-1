@@ -9,10 +9,11 @@ import sys
 from VCDU import VCDU
 from MPDU import MPDU
 from CPPDU import CPPDU
+from TPFile import TPFile
 
 class Demuxer:
 
-    def __init__(self, mode):
+    def __init__(self, mode, dirs):
         """
         Initialise Demuxer class
         :param mode: Specify LRIT or HRIT mode (currently unused)
@@ -20,8 +21,10 @@ class Demuxer:
 
         # Set up instance globals
         self.mode = mode
+        self.dirs = dirs
         self.lastVCID = None
         self.seenVCDUChange = False
+        self.currentTPFile = None
 
         # Generate CP_PDU CRC table once rather than on every CRC check
         self.crcTable = CPPDU(b'', 0).gen_CRC_LUT()
@@ -100,7 +103,6 @@ class Demuxer:
             # Add data from M_PDU to new CP_PDU
             self.currentCPPDU.start(self.currentCPPDU.POST_HEADER_DATA)
 
-            #TODO: Open new TP_File
 
         # If data precedes CP_PDU header (last or middle CP_PDUs in TP_File)
         else:
@@ -124,8 +126,11 @@ class Demuxer:
                     diff = ac - ex
                     print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
                 
-                #TODO: Append CP_PDU to current TP_File
-                #TODO: Close current TP_File
+                # Append complete CP_PDU to current TP_File
+                self.currentTPFile.append(self.currentCPPDU.get_data())
+                self.currentTPFile.close(self.dirs[1])
+                self.currentTPFile.print_info()
+                self.currentTPFile = None
 
                 return
             
@@ -158,9 +163,16 @@ class Demuxer:
                     ac = len(self.currentCPPDU.fullCPPDU)
                     diff = ac - ex
                     print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
+                
+                if self.currentTPFile == None:
+                    # Start new TP_File and add complete CP_PDU
+                    self.currentTPFile = TPFile(self.currentCPPDU.get_data())
+                    self.currentTPFile.start(self.currentCPPDU.get_data())
+                else:
+                    # Append complete CP_PDU to current TP_File
+                    self.currentTPFile.append(self.currentCPPDU.get_data())
 
-                #TODO: Append CP_PDU to current TP_File
-
+                # Continue on to new CP_PDU
                 if self.currentCPPDU.SEQ != "LAST":
                     # Add data from M_PDU to new CP_PDU
                     self.currentCPPDU = nextCPPDU
