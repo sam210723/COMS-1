@@ -76,3 +76,11 @@ class VCDU:
             self.VC = "FILL"
         else:
             self.VC = None
+
+
+    def print_info(self):
+        """
+        Prints information about the current VCDU to the console
+        """
+
+        print("\n\n[VCID] {} {}: {}".format(self.SC, self.VCID, self.VC))

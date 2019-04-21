@@ -3,6 +3,7 @@ CPPDU.py
 https://github.com/sam210723/COMS-1
 
 Parses xRIT CCSDS Path Protocol Data Unit (CP_PDU) header and returns associated chunks of CP_PDU
+Assembles and parses xRIT CCSDS Path Protocol Data Units (CP_PDU) from multiple M_PDUs
 """
 
 from tools import get_bits, get_bits_int
@@ -129,3 +130,12 @@ class CPPDU:
             return True
         else:
             return False
+
+
+    def print_info(self):
+        """
+        Prints information about the current CP_PDU to the console
+        """
+
+        print("  [CP_PDU] APID: {}   SEQ: {}   #{}   LEN: {}".format(self.APID, self.SEQ, self.COUNTER, self.LENGTH))
+        #print("  [CP_PDU] APID: {}   SEQ: {}   #{}   LEN: {}   PRE: {}  POST: {}".format(self.APID, self.SEQ, self.COUNTER, self.LENGTH, len(self.PRE_HEADER_DATA), len(self.POST_HEADER_DATA)))

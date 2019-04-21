@@ -59,9 +59,8 @@ class Demuxer:
             self.seenVCDUChange = True      
             self.lastVCID = currentVCDU.VCID
 
-            # Show VCID change
-            #TODO: In-class print methods
-            print("\n\n[VCID] {}: {}".format(currentVCDU.VCID, currentVCDU.VC))
+            # Display VCID change
+            currentVCDU.print_info()
 
         if currentVCDU.VCID == 63:
             # Discard fill packets
@@ -69,25 +68,18 @@ class Demuxer:
 
 
         """
-        MPDU
+        M_PDU
         """
-        # Parse MPDU
+        # Parse M_PDU
         self.currentMPDU = MPDU(currentVCDU.MPDU)
 
-        # Current MPDU contains a CP_PDU header
+        # Current M_PDU contains a CP_PDU header
         if self.currentMPDU.HEADER:
             self.handle_CPPDU_header()
 
-        # No CP_PDU header present in current MPDU
+        # No CP_PDU header present in current M_PDU
         else:
-            #TODO: Find cause of AttibuteError
-            try:
-                self.currentCPPDU
-            except AttributeError as e:
-                print(e)
-                return
-            
-            # Append MPDU data field to current CP_PDU
+            # Append M_PDU data field to current CP_PDU
             self.currentCPPDU.append(self.currentMPDU.FRAME)
             print(".", end='')
 
@@ -97,7 +89,7 @@ class Demuxer:
 
     def handle_CPPDU_header(self):
         """
-        Handles CP_PDU headers
+        Handles CP_PDU headers and triggers TP_File handling
         """
 
         # If no data precedes CP_PDU header (first CP_PDU in TP_File)
@@ -105,7 +97,7 @@ class Demuxer:
             # Parse CP_PDU header
             self.currentCPPDU = CPPDU(self.currentMPDU.FRAME, self.currentMPDU.POINTER)
 
-            # Add data from MPDU to new CP_PDU
+            # Add data from M_PDU to new CP_PDU
             self.currentCPPDU.start(self.currentCPPDU.POST_HEADER_DATA)
 
             #TODO: Open new TP_File
@@ -114,7 +106,7 @@ class Demuxer:
         else:
             # Detect special EOF marker CP_PDU after last CP_PDU in TP_File
             if CPPDU(self.currentMPDU.FRAME, self.currentMPDU.POINTER).is_EOF_marker():
-                # Append final bytes of current CP_PDU from current MPDU before EOF marker CP_PDU header
+                # Append final bytes of current CP_PDU from current M_PDU before EOF marker CP_PDU header
                 self.currentCPPDU.append(self.currentMPDU.FRAME[:self.currentMPDU.POINTER])
 
                 # CP_PDU CRC
@@ -131,7 +123,8 @@ class Demuxer:
                     ac = len(self.currentCPPDU.fullCPPDU)
                     diff = ac - ex
                     print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
-
+                
+                #TODO: Append CP_PDU to current TP_File
                 #TODO: Close current TP_File
 
                 return
@@ -166,11 +159,12 @@ class Demuxer:
                     diff = ac - ex
                     print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
 
+                #TODO: Append CP_PDU to current TP_File
+
                 if self.currentCPPDU.SEQ != "LAST":
-                    # Add data from MPDU to new CP_PDU
+                    # Add data from M_PDU to new CP_PDU
                     self.currentCPPDU = nextCPPDU
                     self.currentCPPDU.start(self.currentCPPDU.POST_HEADER_DATA)
 
-        #TODO: In-class print methods
-        print("  [CP_PDU] APID: {}, {}, #{}, LEN: {}, PRE: {}, POST: {}".format(self.currentCPPDU.APID, self.currentCPPDU.SEQ, self.currentCPPDU.COUNTER, self.currentCPPDU.LENGTH, len(self.currentCPPDU.PRE_HEADER_DATA), len(self.currentCPPDU.POST_HEADER_DATA)))
+        self.currentCPPDU.print_info()
         print("    .", end='')
