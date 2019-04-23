@@ -69,4 +69,26 @@ class TPFile:
         Prints information about the current TP_File to the console
         """
 
-        print("\n    [TP_File] COUNTER: {}   LENGTH: {}".format(self.COUNTER, int(self.LENGTH/8)))
+        # Get image band based on file counter
+        if 0 <= self.COUNTER <= 9:
+            band = "VIS"
+            num = self.COUNTER
+        elif 10 <= self.COUNTER <= 19:
+            band = "SWIR"
+            num = self.COUNTER - 10
+        elif 20 <= self.COUNTER <= 29:
+            band = "WV"
+            num = self.COUNTER - 20
+        elif 30 <= self.COUNTER <= 39:
+            band = "IR1"
+            num = self.COUNTER - 30
+        elif 40 <= self.COUNTER <= 49:
+            band = "IR2"
+            num = self.COUNTER - 40
+        else:
+            band = "Other"
+            num = "?"
+        
+        countType = " ({}, SEGMENT: {})".format(band, num)
+
+        print("\n    [TP_File] COUNTER: {}{}   LENGTH: {}".format(self.COUNTER, countType, int(self.LENGTH/8)))
