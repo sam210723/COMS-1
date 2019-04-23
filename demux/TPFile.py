@@ -53,9 +53,9 @@ class TPFile:
         Writes encrypted S_PDU contained in complete TP_File to temp directory
         """
 
-        fpath = path + "\\tpfile.bin"
+        #TODO: Check length against length header
 
-        print("  {}".format(fpath))
+        fpath = path + "\\spdu.bin"
 
         file = open(fpath, mode='wb')
         file.write(self.get_data())
@@ -69,4 +69,4 @@ class TPFile:
         Prints information about the current TP_File to the console
         """
 
-        print("  [TP_File] COUNTER: {}   LENGTH: {}".format(self.COUNTER, int(self.LENGTH/8)))
+        print("\n    [TP_File] COUNTER: {}   LENGTH: {}".format(self.COUNTER, int(self.LENGTH/8)))

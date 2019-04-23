@@ -6,7 +6,7 @@
     <key>options</key>
     <param>
       <key>author</key>
-      <value>sam210723</value>
+      <value>sam210723 (https://vksdr.com)</value>
     </param>
     <param>
       <key>window_size</key>
@@ -54,7 +54,7 @@
     </param>
     <param>
       <key>qt_qss_theme</key>
-      <value>E:\Google Drive\Documents\Radio\Satellites\COMS 1\GRC\dark.qss</value>
+      <value></value>
     </param>
     <param>
       <key>realtime_scheduling</key>
@@ -440,7 +440,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -581,7 +581,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -664,7 +664,7 @@
     </param>
     <param>
       <key>psize</key>
-      <value>892</value>
+      <value>1024</value>
     </param>
     <param>
       <key>eof</key>
@@ -691,11 +691,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>0</value>
     </param>
     <param>
       <key>file</key>
-      <value>E:\COMS New BW\SDRSharp_20190327_232500Z_1692140000Hz_IQ.wav</value>
+      <value></value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -2140,7 +2140,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>0</value>
+      <value>1</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -2913,7 +2913,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>0</value>
     </param>
     <param>
       <key>fbw</key>
@@ -2972,7 +2972,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>0</value>
+      <value>1</value>
     </param>
     <param>
       <key>fbw</key>
