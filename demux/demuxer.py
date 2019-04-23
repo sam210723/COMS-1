@@ -10,6 +10,7 @@ from VCDU import VCDU
 from MPDU import MPDU
 from CPPDU import CPPDU
 from TPFile import TPFile
+from assembler import Assembler
 
 class Demuxer:
 
@@ -128,9 +129,9 @@ class Demuxer:
                 
                 # Append complete CP_PDU to current TP_File
                 self.currentTPFile.append(self.currentCPPDU.get_data())
-                self.currentTPFile.close(self.dirs[1])
-                self.currentTPFile.print_info()
-                self.currentTPFile = None
+
+                # Assemble completed TP_File into decrypted xRIT file
+                self.assemble_file()
 
                 return
             
@@ -180,3 +181,20 @@ class Demuxer:
 
         self.currentCPPDU.print_info()
         print("    .", end='')
+
+
+    def assemble_file(self):
+        # Save contained S_PDU to temp directory
+        self.currentTPFile.close(self.dirs[1])
+
+        # Print TP_File information
+        self.currentTPFile.print_info()
+
+        # Clear current TP_File global
+        self.currentTPFile = None
+
+
+        # Assemble xRIT file
+        spdu = open(self.dirs[1] + "\\spdu.bin", 'rb')
+        xritFile = Assembler(spdu.read())
+        xritFile.print_info()
