@@ -36,7 +36,7 @@ def parse_primary(data):
     Parses xRIT primary header to get field lengths
     """
 
-    print("Parsing primary xRIT header...\n")
+    print("Parsing primary xRIT header...")
 
     primaryHeader = data[:16]
 

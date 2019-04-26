@@ -19,7 +19,7 @@ class Assembler:
     
 
     def parse(self):
-        print("      Parsing primary xRIT header...")
+        print("      Parsing xRIT headers...")
 
         primaryHeader = self.data[:16]
 
@@ -47,10 +47,33 @@ class Assembler:
         elif self.FILE_TYPE == 131:
             self.FILE_TYPE = "Typhoon Info"
 
-        print("        TYPE: {}".format(self.FILE_TYPE))
-        print("        HEADER LENGTH: {} bits".format(self.TOTAL_HEADER_LEN))
-        print("        DATA LENGTH: {} bits".format(self.DATA_LEN))
+        print("        TYPE:      {}".format(self.FILE_TYPE))
+        #print("        HEADER LENGTH: {} bits".format(self.TOTAL_HEADER_LEN))
+        #print("        DATA LENGTH: {} bits".format(self.DATA_LEN))
+
+
+        # Loop through headers until Annotation Text header (type 4)
+        offset = self.HEADER_LEN
+        nextHeader = self.get_next_header(offset)
+
+        while nextHeader != 4:
+            offset += self.get_header_len(offset)
+            nextHeader = self.get_next_header(offset)
+        
+        # Parse Annotation Text header (type 4)
+        athLen = self.get_header_len(offset)
+        athFileName = self.data[offset + 3 : offset + athLen].decode('utf-8')
+        print("        FILE NAME: {}".format(athFileName))
+        return
+
+
+    def get_next_header(self, offset):
+        return int.from_bytes(self.data[offset : offset + 1], byteorder='big')
     
+    
+    def get_header_len(self, offset):
+        return int.from_bytes(self.data[offset + 1 : offset + 3], byteorder='big')
+
 
     def decrypt(self):
         #print("      Decrypting xRIT payload...")

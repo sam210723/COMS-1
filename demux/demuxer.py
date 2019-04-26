@@ -52,6 +52,7 @@ class Demuxer:
         if self.lastVCID == None:
             # First VCDU (demuxer just started)
             self.lastVCID = currentVCDU.VCID
+            currentVCDU.print_info()
             return
         elif self.lastVCID == currentVCDU.VCID:
             # VCID has not changed
