@@ -6,32 +6,71 @@ Decrypts xRIT file into a plain-text xRIT file using single layer DES
 """
 
 import argparse
+import glob
+import os
 import pyDes
 
 argparser = argparse.ArgumentParser(description="Decrypts xRIT file into a plain-text xRIT file using single layer DES")
 argparser.add_argument("KEY", action="store", help="Decryption key")
-argparser.add_argument("XRIT", action="store", help="xRIT file to decrypt")
+argparser.add_argument("XRIT", action="store", help="xRIT file (or folder) to decrypt")
 args = argparser.parse_args()
 
 xritFile = None
 xritBytes = None
+files = []
+
+def init():
+    # If input is a directory
+    if os.path.isdir(args.XRIT):
+        # Loop through all .lrit/.hrit files in directory
+        print("Finding xRIT segments...\n")
+
+        # Loop through files with .lrit extension in input folder
+        for f in glob.glob(args.XRIT + "/*.lrit"):
+            files.append(f)
+        
+        # Loop through files with .hrit extension in input folder
+        for f in glob.glob(args.XRIT + "/*.hrit"):
+            files.append(f)
+            print(" - {}".format(f))
+
+        if files.__len__() <= 0:
+            print("No LRIT/HRIT files found")
+            exit(1)
+        
+        # Print file list
+        print("Found {} files: ".format(len(files)))
+        for f in files:
+            print("  {}".format(f))
+        
+        print("\nDecrypting files...")
+        print("-----------------------------------------")
+        for f in files:
+            load_xrit(f)
+            print("-----------------------------------------")
+
+        exit(0)
+
+    else:
+        # Load and decrypt single file
+        load_xrit(args.XRIT)
 
 
-def load_xrit():
+def load_xrit(fpath):
     """
     Loads xRIT file from disk
     """
 
-    print("Loading xRIT file \"{}\"...".format(args.XRIT))
+    print("\nLoading xRIT file \"{}\"...".format(args.XRIT))
 
-    xritFile = open(args.XRIT, 'rb')
+    xritFile = open(fpath, 'rb')
     xritBytes = xritFile.read()
     xritFile.close()
 
-    parse_primary(xritBytes)
+    parse_primary(xritBytes, fpath)
 
 
-def parse_primary(data):
+def parse_primary(data, fpath):
     """
     Parses xRIT primary header to get field lengths
     """
@@ -48,25 +87,25 @@ def parse_primary(data):
     DATA_LEN = get_bits_int(primaryHeader, 64, 64, 128)                # Data Field Length
 
     print("  Header Length: {} bits".format(TOTAL_HEADER_LEN))
-    print("  Data Length: {} bits\n".format(DATA_LEN))
+    print("  Data Length: {} bits".format(DATA_LEN))
 
     headerField = data[:TOTAL_HEADER_LEN]
     dataField = data[TOTAL_HEADER_LEN:]
-    decrypt(headerField, dataField)
+    decrypt(headerField, dataField, fpath)
 
 
-def decrypt(headers, data):
+def decrypt(headers, data, fpath):
     print("Decrypting...")
 
     keyBytes = bytes.fromhex(args.KEY)
     desObj = pyDes.des(keyBytes, mode=pyDes.ECB)
     decData = desObj.decrypt(data, padmode=pyDes.PAD_NORMAL)
     
-    decFile = open(args.XRIT + ".dec", 'wb')
+    decFile = open(fpath + ".dec", 'wb')
     decFile.write(headers)
     decFile.write(decData)
     decFile.close()
-    print("Output file: {}".format(args.XRIT + ".dec"))
+    print("Output file: {}".format(fpath + ".dec"))
 
 
 def get_bits(data, start, length, count):
@@ -101,4 +140,4 @@ def get_bits_int(data, start, length, count):
     return int(bits, 2)
 
 
-load_xrit()
+init()
