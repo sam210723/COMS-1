@@ -239,9 +239,9 @@ class COMS:
             self.imageDataFunctionHeader['data_definition_block'] = self.readbytes(3, self.imageDataFunctionHeader['header_len'] - 3).decode()
             self.imageDataFunctionHeader['data_definition_block_filename'] = self.path[:-5] + "_IDF-DDB.txt"
 
-            ddbFile = open(self.imageDataFunctionHeader['data_definition_block_filename'], 'w')
-            ddbFile.write(self.imageDataFunctionHeader['data_definition_block'])
-            ddbFile.close()
+            #ddbFile = open(self.imageDataFunctionHeader['data_definition_block_filename'], 'w')
+            #ddbFile.write(self.imageDataFunctionHeader['data_definition_block'])
+            #ddbFile.close()
 
             self.byteOffset += self.imageDataFunctionHeader['header_len']
             if printInfo:
