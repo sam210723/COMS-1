@@ -62,8 +62,9 @@ class Assembler:
         
         # Parse Annotation Text header (type 4)
         athLen = self.get_header_len(offset)
-        athFileName = self.data[offset + 3 : offset + athLen].decode('utf-8')
-        print("        FILE NAME: {}".format(athFileName))
+        self.OUTPUT_FILE_NAME = self.data[offset + 3 : offset + athLen].decode('utf-8')
+        print("        FILE NAME: {}".format(self.OUTPUT_FILE_NAME))
+
         return
 
 
@@ -82,7 +83,33 @@ class Assembler:
     
 
     def save(self):
-        #print("      Saving xRIT file...")
+        print("      Saving xRIT file...")
+
+        # Split file name into components
+        fnameSplit = self.OUTPUT_FILE_NAME.split("_")
+        fType = fnameSplit[0]
+        obMode = fnameSplit[1]
+        seqNum = fnameSplit[2]
+        specCh = fnameSplit[3]
+        txDate = fnameSplit[4]
+        txTime = fnameSplit[5]
+        segNum = fnameSplit[6][:2]
+        fExt = self.OUTPUT_FILE_NAME.split(".")[1]
+
+        '''
+        print("File Type: " + fType)
+        print("Observation Mode: " + obMode)
+        print("Sequence Number: " + seqNum)
+        print("Spectral Channel: " + specCh)
+        print("Transmission Date: " + txDate)
+        print("Transmission Time: " + txTime)
+        print("Segment Number: " + segNum)
+        print("Extension: " + fExt)
+        '''
+        outPath = self.OUTPUT_FILE_NAME
+        print(outPath)
+        #outFile = open(outPath, mode="wb")
+
         return
 
     def print_info(self):
