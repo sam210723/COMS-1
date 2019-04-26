@@ -46,7 +46,11 @@ def init():
         print("\nDecrypting files...")
         print("-----------------------------------------")
         for f in files:
-            load_xrit(f)
+            if os.path.isfile(f + ".dec"):
+                print("Skipping {}\nFile already decrypted\n".format(f))
+            else:
+                load_xrit(f)
+            
             print("-----------------------------------------")
 
         exit(0)
@@ -139,5 +143,8 @@ def get_bits_int(data, start, length, count):
 
     return int(bits, 2)
 
-
-init()
+try:
+    init()
+except KeyboardInterrupt:
+    print("Exiting...")
+    exit(0)
