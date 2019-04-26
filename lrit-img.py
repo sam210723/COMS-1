@@ -31,7 +31,7 @@ if os.path.isdir(args.INPUT):  # If input is a directory
     print("Detecting IMG segments...")
 
     # Loop through files with .lrit extension in input folder
-    for file in glob.glob(args.INPUT + "/*.lrit"):
+    for file in glob.glob(args.INPUT + "/*.lrit.dec"):
         COMS = comsClass(file)
         COMS.parsePrimaryHeader()
         COMS.parseImageStructureHeader()
