@@ -53,6 +53,7 @@ def init():
             
             print("-----------------------------------------")
 
+        print("\nFinished decryption\nExiting...")
         exit(0)
 
     else:
