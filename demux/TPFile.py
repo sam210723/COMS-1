@@ -47,22 +47,6 @@ class TPFile:
 
         return self.fullTPFile[10:]
     
-    
-    def close(self, path):
-        """
-        Writes encrypted S_PDU contained in complete TP_File to temp directory
-        """
-
-        #TODO: Check length against length header
-
-        fpath = path + "\\spdu.bin"
-
-        file = open(fpath, mode='wb')
-        file.write(self.get_data())
-        file.close()
-
-        return
-    
 
     def print_info(self):
         """

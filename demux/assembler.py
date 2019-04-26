@@ -10,8 +10,9 @@ from tools import get_bits, get_bits_int
 
 class Assembler:
 
-    def __init__(self, data):
+    def __init__(self, data, dirs):
         self.data = data
+        self.dirs = dirs
 
         self.parse()
         self.decrypt()
@@ -83,7 +84,7 @@ class Assembler:
     
 
     def save(self):
-        print("      Saving xRIT file...")
+        #print("      Saving xRIT file...")
 
         # Split file name into components
         fnameSplit = self.OUTPUT_FILE_NAME.split("_")
@@ -106,12 +107,20 @@ class Assembler:
         print("Segment Number: " + segNum)
         print("Extension: " + fExt)
         '''
-        outPath = self.OUTPUT_FILE_NAME
-        print(outPath)
-        #outFile = open(outPath, mode="wb")
+        
+        self.outPath = "{}/{}/{}/{}".format(str.upper(fExt), fType, obMode, txDate)
+        fullPath = "{}/{}".format(self.dirs[0], self.outPath)
 
+        # Create directory for current date if it doesn't exist
+        if not os.path.exists(fullPath):
+            os.makedirs(fullPath)
+
+        # Save file to disk
+        outFile = open(fullPath + "/" + self.OUTPUT_FILE_NAME, mode="wb")
+        outFile.write(self.data)
+        outFile.close()
         return
 
     def print_info(self):
-        #print("        [NEW FILE] ")
+        print("      [NEW FILE] {}".format(self.outPath + "/" + self.OUTPUT_FILE_NAME))
         return

@@ -185,17 +185,12 @@ class Demuxer:
 
 
     def assemble_file(self):
-        # Save contained S_PDU to temp directory
-        self.currentTPFile.close(self.dirs[1])
-
         # Print TP_File information
         self.currentTPFile.print_info()
 
+        # Assemble xRIT file
+        xritFile = Assembler(self.currentTPFile.get_data(), self.dirs)
+        xritFile.print_info()
+
         # Clear current TP_File global
         self.currentTPFile = None
-
-
-        # Assemble xRIT file
-        spdu = open(self.dirs[1] + "\\spdu.bin", 'rb')
-        xritFile = Assembler(spdu.read())
-        xritFile.print_info()
