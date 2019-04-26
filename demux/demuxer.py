@@ -60,8 +60,15 @@ class Demuxer:
                 # Never seen VCID change, ignore data
                 return
         else:
+            # Trigger TP_File processing on VCID change
+            try:
+                if self.currentCPPDU.SEQ == "LAST" and self.lastVCID != 63:
+                    self.finish_tpfile()
+            except AttributeError:
+                pass
+
             # VCID has changed
-            self.seenVCDUChange = True      
+            self.seenVCDUChange = True
             self.lastVCID = currentVCDU.VCID
 
             # Display VCID change
@@ -110,30 +117,7 @@ class Demuxer:
         else:
             # Detect special EOF marker CP_PDU after last CP_PDU in TP_File
             if CPPDU(self.currentMPDU.FRAME, self.currentMPDU.POINTER).is_EOF_marker():
-                # Append final bytes of current CP_PDU from current M_PDU before EOF marker CP_PDU header
-                self.currentCPPDU.append(self.currentMPDU.FRAME[:self.currentMPDU.POINTER])
-
-                # CP_PDU CRC
-                if self.currentCPPDU.check_CRC(self.crcTable):
-                    print("\n    CRC:           OK")
-                else:
-                    print("\n    CRC:           ERROR")
-                
-                # CP_PDU length check
-                if self.currentCPPDU.LENGTH == len(self.currentCPPDU.fullCPPDU):
-                    print("    LENGTH:        OK")
-                else:
-                    ex = self.currentCPPDU.LENGTH
-                    ac = len(self.currentCPPDU.fullCPPDU)
-                    diff = ac - ex
-                    print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
-                
-                # Append complete CP_PDU to current TP_File
-                self.currentTPFile.append(self.currentCPPDU.get_data())
-
-                # Assemble completed TP_File into decrypted xRIT file
-                self.assemble_file()
-
+                #self.finish_tpfile()
                 return
             
             # CP_PDU Sequence Flags CONTINUE and LAST
@@ -182,6 +166,32 @@ class Demuxer:
 
         self.currentCPPDU.print_info()
         print("    .", end='')
+    
+
+    def finish_tpfile(self):
+        # Append final bytes of current CP_PDU from current M_PDU before EOF marker CP_PDU header
+        self.currentCPPDU.append(self.currentMPDU.FRAME[:self.currentMPDU.POINTER])
+
+        # CP_PDU CRC
+        if self.currentCPPDU.check_CRC(self.crcTable):
+            print("\n    CRC:           OK")
+        else:
+            print("\n    CRC:           ERROR")
+        
+        # CP_PDU length check
+        if self.currentCPPDU.LENGTH == len(self.currentCPPDU.fullCPPDU):
+            print("    LENGTH:        OK")
+        else:
+            ex = self.currentCPPDU.LENGTH
+            ac = len(self.currentCPPDU.fullCPPDU)
+            diff = ac - ex
+            print("    LENGTH:        ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
+        
+        # Append complete CP_PDU to current TP_File
+        self.currentTPFile.append(self.currentCPPDU.get_data())
+
+        # Assemble completed TP_File into decrypted xRIT file
+        self.assemble_file()
 
 
     def assemble_file(self):
