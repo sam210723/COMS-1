@@ -59,6 +59,8 @@ elif os.path.isfile(args.INPUT):  # If input is a single file
         segments.append(args.INPUT)  # Add to list of valid IMG files
         totalHeight += COMS.imageStructureHeader['num_lines']
         totalWidth = COMS.imageStructureHeader['num_cols']
+    else:
+        print("File type check failed")
 
 print()
 # Delete output BIN file if it exists
