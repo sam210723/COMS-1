@@ -20,7 +20,7 @@ args = argparser.parse_args()
 TCP_IP = "127.0.0.1"
 CHANNEL_PORT = 5001
 STATS_PORT = 5002
-BUFFER_LEN = 892
+BUFFER_LEN = 1024
 
 # Directory structure
 DIR_ROOT = os.path.abspath(args.ROOT)
