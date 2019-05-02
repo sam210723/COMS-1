@@ -91,11 +91,19 @@ def parse_primary(data, fpath):
     TOTAL_HEADER_LEN = get_bits_int(primaryHeader, 32, 32, 128)        # Total xRIT Header Length
     DATA_LEN = get_bits_int(primaryHeader, 64, 64, 128)                # Data Field Length
 
-    print("  Header Length: {} bits".format(TOTAL_HEADER_LEN))
-    print("  Data Length: {} bits".format(DATA_LEN))
+    print("  Header Length: {} bits ({} bytes)".format(TOTAL_HEADER_LEN, TOTAL_HEADER_LEN/8))
+    print("  Data Length: {} bits ({} bytes)".format(DATA_LEN, DATA_LEN/8))
 
     headerField = data[:TOTAL_HEADER_LEN]
-    dataField = data[TOTAL_HEADER_LEN:]
+    dataField = data[TOTAL_HEADER_LEN: TOTAL_HEADER_LEN + DATA_LEN]
+
+    # Append null bytes to data field to fill last 8 byte DES block
+    dFMod8 = len(dataField) % 8
+    if dFMod8 != 0:
+        for i in range(dFMod8):
+            dataField += b'x00'
+        print("\nAdded {} null bytes to fill last DES block\n".format(dFMod8))
+
     decrypt(headerField, dataField, fpath)
 
 
