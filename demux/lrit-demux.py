@@ -2,10 +2,11 @@
 lrit-demux.py
 https://github.com/sam210723/COMS-1
 
-De-multiplexes LRIT downlink into LRIT files.
+De-multiplexes LRIT downlink VCDUs into LRIT files.
 """
 
 import argparse
+from configparser import ConfigParser
 import os
 import socket
 
@@ -13,17 +14,25 @@ from demuxer import Demuxer
 #from statistics import Statistics
 from tools import get_bits, new_dir_exists
 
-argparser = argparse.ArgumentParser(description="De-multiplexes LRIT downlink into LRIT files.")
-argparser.add_argument("ROOT", action="store", help="LRIT file directory")
+# Parse CLI arguments
+argparser = argparse.ArgumentParser(description="De-multiplexes LRIT downlink VCDUs into LRIT files.")
+argparser.add_argument("--config", action="store", help="Configuration file path", default="lrit-demux.ini")
 args = argparser.parse_args()
 
-TCP_IP = "127.0.0.1"
-CHANNEL_PORT = 5001
-STATS_PORT = 5002
+# Parse config file
+cfgparser = ConfigParser()
+cfgparser.read(args.config)
+
+# Set global variables
+TCP_IP = cfgparser.get('network', 'ip')
+CHANNEL_PORT = int(cfgparser.get('network', 'vchannel'))
+STATS_PORT = int(cfgparser.get('network', 'statistics'))
 BUFFER_LEN = 1024
+OUTPUT_ROOT = cfgparser.get('demuxer', 'output')
+DECODER_MODE = cfgparser.get('demuxer', 'decoder')
 
 # Directory structure
-DIR_ROOT = os.path.abspath(args.ROOT)
+DIR_ROOT = os.path.abspath(OUTPUT_ROOT)
 DIR_LRIT = DIR_ROOT + "/LRIT"
 DIR_LRIT_IMG = DIR_LRIT + "/IMG"
 DIR_LRIT_IMG_FD = DIR_LRIT_IMG + "/FD"
@@ -47,6 +56,11 @@ def init():
     print("COMS-1 LRIT Demuxer\n")
     print("Virtual Channel Port: {}".format(CHANNEL_PORT))
     #print("Statistics Port: {}\n".format(STATS_PORT))
+
+    if DECODER_MODE == "osp":
+        print("\nStarting in Open Satellite Project mode...")
+    elif DECODER_MODE == "goesrecv":
+        print("\nStarting in goestools/goesrecv mode...")
 
     config_dirs()
 
@@ -78,7 +92,7 @@ def config_dirs():
     """
     Create required directory structure
     """
-    print("Creating directories...")
+    print("\nCreating directories...")
     print(DIR_ROOT)
     
     for DIR in DIRS:
