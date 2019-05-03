@@ -34,7 +34,7 @@ DIRS = [DIR_ROOT, DIR_LRIT, DIR_LRIT_IMG, DIR_LRIT_IMG_FD, DIR_LRIT_IMG_ENH, DIR
 
 # TCP Clients
 channelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 demux = Demuxer("LRIT", DIRS)
 
@@ -42,13 +42,13 @@ demux = Demuxer("LRIT", DIRS)
 def init():
     print("COMS-1 LRIT Demuxer\n")
     print("Virtual Channel Port: {}".format(CHANNEL_PORT))
-    print("Statistics Port: {}\n".format(STATS_PORT))
+    #print("Statistics Port: {}\n".format(STATS_PORT))
 
     config_dirs()
 
     # Start TCP clients
     start_channel_client()
-    start_stats_client()
+    #start_stats_client()
 
     print("─────────────────────────────────────────────────────────")
     print("Waiting for Virtual Channel to change...")
