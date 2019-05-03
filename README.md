@@ -1,5 +1,13 @@
 # COMS-1
-Tools for COMS-1 xRIT satellite data. Requires Python 3.
+COMS-1 is a geostationary meteorological satellite operated by the [Korean Meteorological Agency](http://www.kma.go.kr/eng/index.jsp)'s (KMA) [National Satellite Center](http://nmsc.kma.go.kr/html/homepage/en/ver2/main.do) (NMSC). It is positioned at 128.15˚E and provides real-time meteorological data for most of Asia and Oceania.
+
+It broadcasts meteorological data to end-users via two L-band (~1.69 GHz) downlinks:
+- Low Rate Information Transmission (LRIT)
+- High Rate Information Transmission (HRIT)
+
+These downlinks can be received with an inexpensive hardware setup and some open-source software. This repo contains part of the software required for receiving these weather images.
+
+More information can be found in [these blog posts on my site](https://vksdr.com/t/coms-1).
 
 | Component     | Description   | Dependencies  |
 | ------------- | ------------- | ------------- |
