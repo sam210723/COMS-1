@@ -88,7 +88,8 @@ def bridge():
             tcpSocket.send(data)
         except socket.error as e:
             if e.errno == 10054:
-                print("SOCKET CLOSED BY REMOTE")
+                print("TCP SOCKET CLOSED BY REMOTE")
+                print(e)
             else:
                 print(e)
         
