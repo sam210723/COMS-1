@@ -85,17 +85,28 @@ class Assembler:
 
     def save(self):
         #print("      Saving xRIT file...")
-
+        
         # Split file name into components
         fnameSplit = self.OUTPUT_FILE_NAME.split("_")
+
         fType = fnameSplit[0]
-        obMode = fnameSplit[1]
-        seqNum = fnameSplit[2]
-        specCh = fnameSplit[3]
-        txDate = fnameSplit[4]
-        txTime = fnameSplit[5]
-        segNum = fnameSplit[6][:2]
-        fExt = self.OUTPUT_FILE_NAME.split(".")[1]
+
+        if fType == "IMG":
+            obMode = fnameSplit[1]
+            seqNum = fnameSplit[2]
+            specCh = fnameSplit[3]
+            txDate = fnameSplit[4]
+            txTime = fnameSplit[5]
+            segNum = fnameSplit[6][:2]
+            fExt = self.OUTPUT_FILE_NAME.split(".")[1]
+        elif fType == "ADD":
+            obMode = fnameSplit[1]
+            seqNum = fnameSplit[2]
+            txDate = fnameSplit[3]
+            txTime = fnameSplit[4]
+            segNum = fnameSplit[5][:2]
+            fExt = self.OUTPUT_FILE_NAME.split(".")[1]
+
 
         '''
         print("File Type: " + fType)
