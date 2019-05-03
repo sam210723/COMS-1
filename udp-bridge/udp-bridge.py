@@ -99,9 +99,8 @@ def bridge():
                 startTCP()
             else:
                 print(e)
-        
-            print("Exiting...\n")
-            exit()   
-    
+                print("Exiting...\n")
+                exit()   
+
 
 init()
