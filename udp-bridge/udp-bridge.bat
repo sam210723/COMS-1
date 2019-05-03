@@ -2,3 +2,4 @@
 title UDP - TCP Bridge
 
 python udp-bridge.py 4999 5000
+pause

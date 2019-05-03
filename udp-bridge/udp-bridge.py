@@ -78,6 +78,9 @@ def bridge():
     """
     Forward incoming UDP data to TCP socket
     """
+    
+    global udpSocket
+    global tcpSocket
 
     print("PORTS BRIDGED\n")
 
@@ -89,7 +92,11 @@ def bridge():
         except socket.error as e:
             if e.errno == 10054:
                 print("TCP SOCKET CLOSED BY REMOTE")
-                print(e)
+                
+                print("Restarting TCP connection...")
+                tcpSocket.close()
+                tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                startTCP()
             else:
                 print(e)
         
