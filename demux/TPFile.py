@@ -54,19 +54,19 @@ class TPFile:
         """
 
         # Get image band based on file counter
-        if 0 <= self.COUNTER <= 9:
+        if 1 <= self.COUNTER <= 10:
             band = "VIS"
             num = self.COUNTER
-        elif 10 <= self.COUNTER <= 19:
+        elif 11 <= self.COUNTER <= 20:
             band = "SWIR"
             num = self.COUNTER - 10
-        elif 20 <= self.COUNTER <= 29:
+        elif 21 <= self.COUNTER <= 30:
             band = "WV"
             num = self.COUNTER - 20
-        elif 30 <= self.COUNTER <= 39:
+        elif 31 <= self.COUNTER <= 40:
             band = "IR1"
             num = self.COUNTER - 30
-        elif 40 <= self.COUNTER <= 49:
+        elif 41 <= self.COUNTER <= 50:
             band = "IR2"
             num = self.COUNTER - 40
         else:
