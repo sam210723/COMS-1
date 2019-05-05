@@ -66,7 +66,7 @@ def load_xrit(fpath):
     Loads xRIT file from disk
     """
 
-    print("\nLoading xRIT file \"{}\"...".format(args.XRIT))
+    print("\nLoading xRIT file \"{}\"...".format(fpath))
 
     xritFile = open(fpath, 'rb')
     xritBytes = xritFile.read()
