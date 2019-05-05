@@ -6,118 +6,269 @@ Extracts image data from LRIT IMG file.
 """
 
 import argparse
-from coms import COMS as comsClass
 import glob
-from PIL import Image
-import numpy as np
+import io
 import os
-from subprocess import call
+from PIL import Image
+import sys
 
-argparser = argparse.ArgumentParser(description="Extracts Meteorological Imager data from LRIT Image (IMG) files.")
-argparser.add_argument("INPUT", action="store", help="Input LRIT file/folder path")
-argparser.add_argument('OUTPUT', action="store", help="Output BIN file path")
-argparser.add_argument('-i', action="store_true", help="Generate BMP from BIN file")
-argparser.add_argument('-o', action="store_true", help="Add info text to generated BMP (assumes -i)")
-argparser.add_argument('-m', action="store_true", help="Add map overlay to generated BMP (assumes -i)")
-argparser.add_argument('-f', action="store", help="Overlay text fill colour", default="white")
+argparser = argparse.ArgumentParser(description="Extracts image data from LRIT IMG file.")
+argparser.add_argument("INPUT", action="store", help="LRIT file (or folder) to process")
 args = argparser.parse_args()
 
-segments = []  # List of IMG files
-totalWidth = 0
-totalHeight = 0
+# Globals
+files = []
+groups = {}
 
-if os.path.isdir(args.INPUT):  # If input is a directory
-    multipleSegments = True
-    print("Detecting IMG segments...")
+def init():
+    """
+    Parse arguments then locate images and segments
+    """
 
-    # Loop through files with .lrit extension in input folder
-    for file in glob.glob(args.INPUT + "/*.lrit.dec"):
-        COMS = comsClass(file)
-        COMS.parsePrimaryHeader()
-        COMS.parseImageStructureHeader()
+    # Check if input is a directory
+    if os.path.isdir(args.INPUT):
+        # Loop through files with .lrit.dec extension in input folder
+        for f in glob.glob(args.INPUT + "/*.lrit.dec"):
+            files.append(f)
+        
+        if files.__len__() <= 0:
+            print("No LRIT files found")
+            exit(1)
+        
+        # Print file list
+        print("Found {} LRIT files: ".format(len(files)))
+        for f in files:
+            print("  {}".format(f))
 
-        if COMS.primaryHeader['file_type'] == 0:  # Check LRIT file has IMG file type
-            segments.append(file)  # Add to list of valid IMG files
-            totalHeight += COMS.imageStructureHeader['num_lines']
-            totalWidth = COMS.imageStructureHeader['num_cols']
+        # Group image segments
+        for f in files:
+            img, mode, segment = parse_fname(f)
 
-    if segments.__len__() <= 0:
-        print("No valid IMG files found")
-        exit(1)
+            # If group exists in group list
+            if img not in groups.keys():
+                groups[img] = []
+            
+            # Add file to group
+            groups[img].append(f)
+        
+        # Print image list
+        print("\n\nFound {} images:".format(len(groups.keys())))
+        for img in list(groups):
+            print("  {}".format(img))
 
-    print("Found {0} segments: ".format(segments.__len__()))
-    for segment in segments:  # List detected segments
-        print(" - {0}".format(segment))
+            # Check for missing segments
+            foundSegments = len(groups[img])
+            name, mode, segment = parse_fname(groups[img][0])
+            totalSegments = get_total_segments(mode)
 
-elif os.path.isfile(args.INPUT):  # If input is a single file
-    multipleSegments = False
-    COMS = comsClass(args.INPUT)
-    COMS.parsePrimaryHeader()
-    COMS.parseImageStructureHeader()
+            if totalSegments == None:
+                print("    Unrecognised observation mode \"{}\"".format(mode))
+            
+            if foundSegments == totalSegments:
+                print("    Found {} of {} segments".format(foundSegments, totalSegments))
+            else:
+                print("    MISSING {} SEGMENTS".format(totalSegments - foundSegments))
+                print("    IMAGE GENERATION WILL BE SKIPPED")
 
-    if COMS.primaryHeader['file_type'] == 0:  # Check LRIT file has IMG file type
-        segments.append(args.INPUT)  # Add to list of valid IMG files
-        totalHeight += COMS.imageStructureHeader['num_lines']
-        totalWidth = COMS.imageStructureHeader['num_cols']
+                # Remove image group from list
+                groups.pop(img, None)
+            
+            # Check image has not already been generated
+            if os.path.isfile(args.INPUT + "\\" + name + ".jpg"):
+                print("    IMAGE ALREADY GENERATED...SKIPPING")
+                
+                # Remove image group from list
+                groups.pop(img, None)
+            print()
+
+        print("-----------------------------------------\n")
+
+        # Load and combine segments
+        for img in groups.keys():
+            # Get group details
+            name, mode, segment = parse_fname(groups[img][0])
+
+            process_group(name, mode, groups[img])
+            print("\n")
     else:
-        print("File type check failed")
+        # Load and process single file
+        #load_lrit(args.INPUT)
+        return
 
-print()
-# Delete output BIN file if it exists
-if os.path.isfile(args.OUTPUT):
-    os.remove(args.OUTPUT)
-    print("Deleted existing BIN file: {0}".format(args.OUTPUT))
 
-# Loop through each segment
-for lritFile in segments:
-    # Create COMS class instance and load LRIT file
-    COMS = comsClass(lritFile)
+def process_group(name, mode, files):
+    """
+    Load data field of each segment and combine into one JPEG
+    """
+    print("Processing {}...".format(name))
+    print("  Loading segments", end='')
 
-    # Primary Header (type 0, required)
-    COMS.parsePrimaryHeader()
+    segmentDataFields = []
 
-    # START OPTIONAL HEADERS
-    printOptHeaders = False
-    COMS.parseImageStructureHeader(printOptHeaders)
+    # Load each segment from disk
+    for seg in files:
+        # Load file
+        headerField, dataField = load_lrit(seg)
 
-    COMS.parseImageNavigationHeader(printOptHeaders)
+        # Append data field to data field list
+        segmentDataFields.append(dataField)
+        print(".", end='')
+        sys.stdout.flush()
+    print()
 
-    COMS.parseImageDataFunctionHeader(printOptHeaders)
+    # Create new image
+    finalResH, finalResV = get_image_resolution(mode)
+    outImage = Image.new("RGB", (finalResH, finalResV))
 
-    COMS.parseAnnotationTextHeader(printOptHeaders)
+    # Process segments into images
+    print("  Joining segments", end='')
 
-    COMS.parseTimestampHeader(printOptHeaders)
+    segmentCount = get_total_segments(mode)
+    segmentVRes = int(finalResV / segmentCount)
+    for i, seg in enumerate(segmentDataFields):
+        # Create image object
+        buf = io.BytesIO(seg)
+        img = Image.open(buf)
+        
+        # Append image to output image
+        outImage.paste(img, (0, segmentVRes * i))
 
-    COMS.parseKeyHeader(printOptHeaders)
+        print(".", end='')
+        sys.stdout.flush()
+    print()
 
-    COMS.parseImageSegmentationInformationHeader(printOptHeaders)
+    # Save output image to disk
+    outFName = args.INPUT + "\\" + name + ".jpg"
+    outImage.save(outFName)
+    print("  Saved image: \"{}\"".format(outFName))
 
-    COMS.parseImageObservationTimeHeader(printOptHeaders)
+def load_lrit(fpath):
+    """
+    Load LRIT file and return data field
+    """
 
-    # BEGIN DATA DUMPING
-    binFile = open(args.OUTPUT, "ab")
-    binFile.write(COMS.readbytes(0, COMS.primaryHeader['data_field_len']))  # Dump image bytes to binary BIN file
+    # Read file bytes from disk
+    file = open(fpath, mode="rb")
+    fileBytes = file.read()
+    headerLen, dataLen = parse_primary(fileBytes)
 
-print("{1}Image data dumped to \"{0}\"{2}".format(args.OUTPUT, COMS.colours['OKGREEN'], COMS.colours['ENDC']))
+    # Split file bytes into fields
+    headerField = fileBytes[:headerLen]
+    dataField = fileBytes[headerLen : headerLen + dataLen]
 
-if args.i or args.o or args.m:
-    # See GitHub Issue 1 for details
-    bmpName = args.OUTPUT[:args.OUTPUT.index('.')] + ".bmp"
-    binFile = open(args.OUTPUT, 'rb')
-    z = np.fromfile(binFile, dtype=np.uint8, count=totalWidth * totalHeight)
-    img = Image.frombuffer("L", [totalWidth, totalHeight], z.astype('uint8'), 'raw', 'L', 0, 1)
-    img.save(bmpName)
-    print("{0}\nBMP image generated\n{1}".format(COMS.colours['OKGREEN'], COMS.colours['ENDC']))
+    return headerField, dataField
 
-    if args.o:  # Overlay flag
-        overlayName = bmpName[:bmpName.index('.')] + "_overlay.bmp"
-        channel = COMS.imageDataFunctionHeader['data_definition_block'][9:COMS.imageDataFunctionHeader['data_definition_block'].index("\n")]
-        leftText = "COMS-1 LRIT {0} - {1}".format(COMS.imageTypes[COMS.imageStructureHeader['image_type']], channel)
-        rightText = "{0} {1} UTC".format(COMS.timestampHeader['t_field_current_date'], COMS.timestampHeader['t_field_current_time'])
 
-        if args.m:  # Map flag
-            call(["python3", "overlay.py", "-m", "-f", args.f, bmpName, overlayName, leftText, rightText])
-            print("Map overlay and info text added to BMP")
-        else:
-            call(["python3", "overlay.py", "-f", args.f, bmpName, overlayName, leftText, rightText])
-            print("{0}Info text added to BMP{1}".format(COMS.colours['OKGREEN'], COMS.colours['ENDC']))
+def parse_primary(data):
+    """
+    Parses LRIT primary header to get field lengths
+    """
+
+    #print("Parsing primary LRIT header...")
+
+    primaryHeader = data[:16]
+
+    # Header fields
+    HEADER_TYPE = get_bits_int(primaryHeader, 0, 8, 128)               # File Counter (always 0x00)
+    HEADER_LEN = get_bits_int(primaryHeader, 8, 16, 128)               # Header Length (always 0x10)
+    FILE_TYPE = get_bits_int(primaryHeader, 24, 8, 128)                # File Type
+    TOTAL_HEADER_LEN = get_bits_int(primaryHeader, 32, 32, 128)        # Total LRIT Header Length
+    DATA_LEN = get_bits_int(primaryHeader, 64, 64, 128)                # Data Field Length
+
+    #print("    Header Length: {} bits ({} bytes)".format(TOTAL_HEADER_LEN, TOTAL_HEADER_LEN/8))
+    #print("    Data Length: {} bits ({} bytes)".format(DATA_LEN, DATA_LEN/8))
+
+    return TOTAL_HEADER_LEN, DATA_LEN
+
+
+def parse_fname(fpath):
+    """
+    Parse LRIT file name into components
+    """
+
+    split = fpath.split("_")
+    mode = split[1]
+    name = fpath.replace(".lrit.dec", "")[:-3]
+    name = "IMG_" + name.split("IMG_")[1]
+    segment = int(split[6][:2])
+
+    return name, mode, segment
+
+
+def get_total_segments(mode):
+    """
+    Returns the total number of segments in the given observation mode
+    """
+
+    if mode == "FD":
+        totalSegments = 10
+    elif mode == "ENH":
+        totalSegments = 4
+    elif mode == "LSH":
+        totalSegments = 2
+    elif mode == "APNH":
+        totalSegments = 1
+    else:
+        totalSegments = None
+    
+    return totalSegments
+
+
+def get_image_resolution(mode):
+    """
+    Returns the horizontal and vertical resolution of the given observation mode
+    """
+
+    if mode == "FD":
+        outH = 2200
+        outV = 2200
+    elif mode == "ENH":
+        outH = 1547
+        outV = 1234
+    elif mode == "LSH":
+        outH = 1547
+        outV = 636
+    elif mode == "APNH":
+        outH = 810
+        outV = 611
+    
+    return outH, outV
+
+
+def get_bits(data, start, length, count):
+    """
+    Get bits from bytes
+
+    :param data: Bytes to get bits from
+    :param start: Start offset in bits
+    :param length: Number of bits to get
+    :param count: Total number of bits in bytes (accounts for leading zeros)
+    """
+
+    dataInt = int.from_bytes(data, byteorder='big')
+    dataBin = format(dataInt, '0' + str(count) + 'b')
+    end = start + length
+    bits = dataBin[start : end]
+
+    return bits
+
+def get_bits_int(data, start, length, count):
+    """
+    Get bits from bytes as integer
+
+    :param data: Bytes to get bits from
+    :param start: Start offset in bits
+    :param length: Number of bits to get
+    :param count: Total number of bits in bytes (accounts for leading zeros)
+    """
+
+    bits = get_bits(data, start, length, count)
+
+    return int(bits, 2)
+
+
+try:
+    init()
+except KeyboardInterrupt:
+    print("Exiting...")
+    exit(0)
