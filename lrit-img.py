@@ -9,12 +9,13 @@ import argparse
 import glob
 import io
 import os
-from PIL import Image
+from PIL import Image, ImageFile
 import sys
 
 argparser = argparse.ArgumentParser(description="Extracts image data from LRIT IMG file.")
 argparser.add_argument("INPUT", action="store", help="LRIT file (or folder) to process")
 args = argparser.parse_args()
+ImageFile.LOAD_TRUNCATED_IMAGES = TRUE
 
 # Globals
 files = []
