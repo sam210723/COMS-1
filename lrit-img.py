@@ -92,14 +92,14 @@ def init():
             print("\n")
     else:
         # Load and process single file
-        #load_lrit(args.INPUT)
-        return
+        process_single_segment(args.INPUT)
 
 
 def process_group(name, mode, files):
     """
     Load data field of each segment and combine into one JPEG
     """
+
     print("Processing {}...".format(name))
     print("  Loading segments", end='')
 
@@ -151,6 +151,26 @@ def process_group(name, mode, files):
     outFName = args.INPUT + "\\" + name + ".jpg"
     outImage.save(outFName)
     print("  Saved image: \"{}\"".format(outFName))
+
+
+def process_single_segment(fpath):
+    """
+    Processes a single LRIT segment into an image
+    """
+
+    name, mode, segment = parse_fname(fpath)
+    print("Processing {}...".format(fpath))
+
+    # Load file
+    headerField, dataField = load_lrit(fpath)
+
+    # Create image and save to disk
+    buf = io.BytesIO(dataField)
+    img = Image.open(buf)
+    outFName = args.INPUT + ".jpg"
+    img.save(outFName)
+    print("Saved image: \"{}\"".format(outFName))
+
 
 def load_lrit(fpath):
     """
