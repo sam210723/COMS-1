@@ -15,7 +15,7 @@ import sys
 argparser = argparse.ArgumentParser(description="Extracts image data from LRIT IMG file.")
 argparser.add_argument("INPUT", action="store", help="LRIT file (or folder) to process")
 args = argparser.parse_args()
-ImageFile.LOAD_TRUNCATED_IMAGES = TRUE
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Globals
 files = []
