@@ -130,8 +130,18 @@ def process_group(name, mode, files):
         buf = io.BytesIO(seg)
         img = Image.open(buf)
         
+        # Calculate segment offset
+        if mode == "ENH":
+            if i == 0 or i == 1 or i == 2:
+                vOffset = 309 * i
+            else:
+                # Last ENH segment
+                vOffset = (309 * 2) + 308
+        else:
+            vOffset = segmentVRes * i
+
         # Append image to output image
-        outImage.paste(img, (0, segmentVRes * i))
+        outImage.paste(img, (0, vOffset))
 
         print(".", end='')
         sys.stdout.flush()
