@@ -19,7 +19,7 @@ argparser.add_argument('-m', action="store_true", help="Enable map overlay")
 argparser.add_argument('-f', action="store", help="Text fill colour", default="white")
 argparser.add_argument('-s', action="store", help="Text font size", default="32")
 args = argparser.parse_args()
-shapefileName = "shp/ne_50m_coastline_geos_128.2e.shp"
+shapefileName = "map/ne_50m_coastline_geos_128.2e.shp"
 lineWidth = 2  # Line width in px
 wOff = 48
 hOff = 71
@@ -75,7 +75,7 @@ if args.m:
 
 
 # Info Text
-font = ImageFont.truetype("Arial.ttf", int(args.s))
+font = ImageFont.truetype("C:\WINDOWS\Fonts\Arial.ttf", int(args.s))
 textL = args.LEFT
 textR = args.RIGHT
 textLs = draw.textsize(textL, font)
