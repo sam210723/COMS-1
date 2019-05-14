@@ -57,17 +57,15 @@ class Demuxer:
         elif self.lastVCID == currentVCDU.VCID:
             # VCID has not changed
             if not self.seenVCDUChange:
-                # Never seen VCID change, ignore data
+                # Never seen VCID change, ignore data (avoids starting demux part way through a TP_File)
                 return
         else:
-            # Trigger TP_File processing on VCID change
-            try:
-                if self.currentCPPDU.SEQ == "LAST" and self.lastVCID != 63:
-                    self.finish_tpfile()
-            except AttributeError:
-                pass
-
             # VCID has changed
+
+            # Trigger TP_File processing on VCID change
+            if self.lastVCID != 63:
+                self.finish_tpfile()
+
             self.seenVCDUChange = True
             self.lastVCID = currentVCDU.VCID
 
