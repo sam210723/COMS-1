@@ -24,6 +24,7 @@ class Demuxer:
         self.mode = mode
         self.dirs = dirs
         self.lastVCID = None
+        self.VCDUCounters = {}
         self.seenVCDUChange = False
         self.currentTPFile = None
 
@@ -43,6 +44,15 @@ class Demuxer:
         # Parse VCDU
         currentVCDU = VCDU(data)
         
+        # Check VCDU counter continuity
+        if currentVCDU.VCID in self.VCDUCounters:
+            if currentVCDU.COUNT != (self.VCDUCounters[currentVCDU.VCID] + 1):
+                diff = currentVCDU.COUNT - self.VCDUCounters[currentVCDU.VCID] - 1
+                if diff != -1:
+                    print("DROPPED {} FRAMES   (Current: {}   Last: {}   VCID: {})".format(diff, currentVCDU.COUNT, self.VCDUCounters[currentVCDU.VCID], currentVCDU.VCID))
+        
+        self.VCDUCounters[currentVCDU.VCID] = currentVCDU.COUNT
+
         # Check spacecraft is supported
         if currentVCDU.SC != "COMS-1":
             print("Spacecraft not supported (SCID: {})".format(currentVCDU.SCID))
@@ -64,7 +74,10 @@ class Demuxer:
 
             # Trigger TP_File processing on VCID change
             if self.lastVCID != 63:
-                self.finish_tpfile()
+                try:
+                    self.finish_tpfile()
+                except AttributeError:
+                    pass
 
             self.seenVCDUChange = True
             self.lastVCID = currentVCDU.VCID
