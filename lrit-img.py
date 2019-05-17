@@ -206,7 +206,7 @@ def parse_primary(data):
     TOTAL_HEADER_LEN = get_bits_int(primaryHeader, 32, 32, 128)        # Total LRIT Header Length
     DATA_LEN = get_bits_int(primaryHeader, 64, 64, 128)                # Data Field Length
 
-    #print("    Header Length: {} bits ({} bytes)".format(TOTAL_HEADER_LEN, TOTAL_HEADER_LEN/8))
+    #print("    Header Length: {} bytes".format(TOTAL_HEADER_LEN))
     #print("    Data Length: {} bits ({} bytes)".format(DATA_LEN, DATA_LEN/8))
 
     return TOTAL_HEADER_LEN, DATA_LEN
