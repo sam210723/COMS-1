@@ -138,9 +138,10 @@ def config_input():
     """
 
     if INPUT_MODE == "osp":
+        # Get OSP details from config file
         ospIP = cfgparser.get('osp', 'ip')
         ospChannelPort = int(cfgparser.get('osp', 'vchan'))
-        ospStatsPort = int(cfgparser.get('osp', 'stats'))
+        #ospStatsPort = int(cfgparser.get('osp', 'stats'))
 
         # Start TCP clients for OSP
         print("Connecting to Open Satellite Project ({})...".format(ospIP))
@@ -148,7 +149,7 @@ def config_input():
         #start_osp_stats_client((ospIP, ospStatsPort))
 
     elif INPUT_MODE == "goesrecv":
-        print("goesrecv input is \nExiting...")
+        print("Not implemented\nExiting...")
         exit()
 
     elif INPUT_MODE == "file":
