@@ -24,12 +24,11 @@ cfgparser = ConfigParser()
 cfgparser.read(args.config)
 
 # Set global variables
-TCP_IP = cfgparser.get('network', 'ip')
-CHANNEL_PORT = int(cfgparser.get('network', 'vchannel'))
-STATS_PORT = int(cfgparser.get('network', 'statistics'))
 BUFFER_LEN = 1024
+SPACECRAFT = "COMS-1"
+DOWNLINK = "LRIT"
+INPUT_MODE = cfgparser.get('demuxer', 'input')
 OUTPUT_ROOT = cfgparser.get('demuxer', 'output')
-DECODER_MODE = cfgparser.get('demuxer', 'decoder')
 
 # Directory structure
 DIR_ROOT = os.path.abspath(OUTPUT_ROOT)
@@ -49,26 +48,21 @@ DIRS = [DIR_ROOT, DIR_LRIT, DIR_LRIT_IMG, DIR_LRIT_IMG_FD, DIR_LRIT_IMG_ENH, DIR
 channelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-demux = Demuxer("LRIT", DIRS)
+demux = Demuxer(DOWNLINK, DIRS)
 
 
 def init():
-    print("COMS-1 LRIT Demuxer\n")
-    print("Virtual Channel Port: {}".format(CHANNEL_PORT))
-    #print("Statistics Port: {}\n".format(STATS_PORT))
-
-    if DECODER_MODE == "osp":
-        print("\nStarting in Open Satellite Project mode...")
-    elif DECODER_MODE == "goesrecv":
-        print("\nStarting in goestools/goesrecv mode...")
-
+    print("┌───────────────────────────────┐")
+    print("│      COMS-1 LRIT Demuxer      │")
+    print("│  github.com/sam210723/COMS-1  │")
+    print("└───────────────────────────────┘\n")
+    
+    print_info()
     config_dirs()
+    config_input()
+        
 
-    # Start TCP clients
-    start_channel_client()
-    #start_stats_client()
-
-    print("─────────────────────────────────────────────────────────")
+    print("──────────────────────────────────────────────────────────────────────────────────\n")
     print("Waiting for Virtual Channel to change...")
 
     # Main loop
@@ -88,62 +82,106 @@ def loop():
         #stats.data_in(statsData)
 
 
+def print_info():
+    """
+    Prints configuration information when demuxer starts
+    """
+
+    print("SPACECRAFT:     {}".format(SPACECRAFT))
+    print("DOWNLINK:       {}".format(DOWNLINK))
+
+    if INPUT_MODE == "osp":
+        m = "Open Satellite Project (github.com/opensatelliteproject/xritdemod)"
+    elif INPUT_MODE == "goesrecv":
+        m = "goesrecv (github.com/pietern/goestools)"
+    elif INPUT_MODE == "file":
+        m = "File"
+    else:
+        m = "UNKNOWN"
+    
+    print("INPUT SOURCE:   {}".format(m))
+    print("OUTPUT PATH:    {}".format(DIR_ROOT))
+    print()
+
+
 def config_dirs():
     """
     Create required directory structure
     """
-    print("\nCreating directories...")
-    print(DIR_ROOT)
     
     for DIR in DIRS:
         if new_dir_exists(DIR) != True:
             print("Error creating directories")
             print("Exiting...")
             exit()
-    
-    print()
 
 
-def start_channel_client():
+def config_input():
+    """
+    Configures input based on config file input mode
+    """
+
+    if INPUT_MODE == "osp":
+        ospIP = cfgparser.get('osp', 'ip')
+        ospChannelPort = int(cfgparser.get('osp', 'vchan'))
+        ospStatsPort = int(cfgparser.get('osp', 'stats'))
+
+        # Start TCP clients for OSP
+        print("Connecting to Open Satellite Project ({})...".format(ospIP))
+        start_osp_channel_client((ospIP, ospChannelPort))
+        #start_osp_stats_client((ospIP, ospStatsPort))
+
+    elif INPUT_MODE == "goesrecv":
+        print("goesrecv input is \nExiting...")
+        exit()
+
+    elif INPUT_MODE == "file":
+        print("File input is WIP\nExiting...")
+        exit()
+
+    else:
+        print("UNKNOWN INPUT MODE: \"{}\"".format(INPUT_MODE))
+        print("Exiting...")
+        exit()
+
+
+def start_osp_channel_client(ipport):
     """
     Connect TCP socket to OSP decoder virtual channel port
     """
-    
-    print("Starting CHANNEL client...")
 
     try:
-        channelClient.connect((TCP_IP, CHANNEL_PORT))
+        channelClient.connect(ipport)
     except socket.error as e:
         if e.errno == 10061:
-            print("TCP CONNECTION REFUSED".format())
+            print("  Virtual Channel: CONNECTION REFUSED")
         else:
             print(e)
         
-        print("Exiting...\n")
-        exit()    
-
-    print("CHANNEL OK\n")
-
-
-def start_stats_client():
-    """
-    Connect TCP socket to OSP decoder statistics port
-    """
-
-    print("Starting STATISTICS client...")
-
-    try:
-        statsClient.connect((TCP_IP, STATS_PORT))
-    except socket.error as e:
-        if e.errno == 10061:
-            print("TCP CONNECTION REFUSED".format())
-        else:
-            print(e)
-        
-        print("Exiting...\n")
+        print("\nExiting...")
         exit()
 
-    print("STATISTICS OK\n")
+    print("  Virtual Channel (TCP {}): CONNECTED".format(ipport[1]))
+
+
+def start_osp_stats_client(ipport):
+    """
+    Connect TCP socket to OSP decoder virtual channel port
+    """
+
+    try:
+        statsClient.connect(ipport)
+    except socket.error as e:
+        if e.errno == 10061:
+            print("  Statistics: CONNECTION REFUSED")
+        else:
+            print(e)
+        
+        print("\nExiting...")
+        exit()
+
+    print("  Statistics (TCP {}): CONNECTED".format(ipport[1]))
+
 
 # Catch keyboard interrupt
 try:

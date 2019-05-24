@@ -2,3 +2,4 @@
 title COMS-1 LRIT Demuxer
 
 python lrit-demux.py
+pause
