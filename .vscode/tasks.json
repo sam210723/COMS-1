@@ -4,9 +4,15 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "LRIT Demux",
+            "label": "LRIT Demux (config)",
             "type": "shell",
             "command": "cd demux; python lrit-demux.py",
+            "problemMatcher": []
+        },
+        {
+            "label": "LRIT Demux (file)",
+            "type": "shell",
+            "command": "cd demux; python lrit-demux.py --file ../samples/vcdu.bin",
             "problemMatcher": []
         },
         {

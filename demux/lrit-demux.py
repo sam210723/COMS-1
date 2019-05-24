@@ -17,6 +17,7 @@ from tools import get_bits, new_dir_exists
 # Parse CLI arguments
 argparser = argparse.ArgumentParser(description="De-multiplexes LRIT downlink VCDUs into LRIT files.")
 argparser.add_argument("--config", action="store", help="Configuration file path", default="lrit-demux.ini")
+argparser.add_argument("--file", action="store", help="Path to VCDU file", default=None)
 args = argparser.parse_args()
 
 # Parse config file
@@ -27,8 +28,12 @@ cfgparser.read(args.config)
 BUFFER_LEN = 1024
 SPACECRAFT = "COMS-1"
 DOWNLINK = "LRIT"
-INPUT_MODE = cfgparser.get('demuxer', 'input')
 OUTPUT_ROOT = cfgparser.get('demuxer', 'output')
+
+if args.file == None:
+    INPUT_MODE = cfgparser.get('demuxer', 'input')
+else:
+    INPUT_MODE = "file"
 
 # Directory structure
 DIR_ROOT = os.path.abspath(OUTPUT_ROOT)
@@ -45,8 +50,11 @@ DIR_LRIT_ADD_TYP = DIR_LRIT_ADD + "/TYP"
 DIRS = [DIR_ROOT, DIR_LRIT, DIR_LRIT_IMG, DIR_LRIT_IMG_FD, DIR_LRIT_IMG_ENH, DIR_LRIT_IMG_LSH, DIR_LRIT_ADD, DIR_LRIT_ADD_ANT, DIR_LRIT_ADD_GOCI, DIR_LRIT_ADD_NWP, DIR_LRIT_ADD_TYP]
 
 # TCP Clients
-channelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#statsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ospChannelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#ospStatsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# File source
+vcduFile = None
 
 demux = Demuxer(DOWNLINK, DIRS)
 
@@ -57,10 +65,9 @@ def init():
     print("│  github.com/sam210723/COMS-1  │")
     print("└───────────────────────────────┘\n")
     
-    print_info()
+    print_config_info()
     config_dirs()
-    config_input()
-        
+    config_input()   
 
     print("──────────────────────────────────────────────────────────────────────────────────\n")
     print("Waiting for Virtual Channel to change...")
@@ -71,18 +78,27 @@ def init():
 
 def loop():
     """
-    Handle incoming data from OSP decoder
+    Handle data from input source
     """
 
     while True:
-        channelData = channelClient.recv(BUFFER_LEN)
-        #statsData = statsClient.recv(BUFFER_LEN)
+        if INPUT_MODE == "osp":
+            channelData = ospChannelClient.recv(BUFFER_LEN)
+            #statsData = ospStatsClient.recv(BUFFER_LEN)
+        elif INPUT_MODE == "goesrecv":
+            return
+        elif INPUT_MODE == "file":
+            channelData = vcduFile.read(892)
+
+            if channelData == b'':
+                print("\n\nREACHED END OF INPUT FILE\nExiting...")
+                exit()
 
         demux.data_in(channelData)
         #stats.data_in(statsData)
 
 
-def print_info():
+def print_config_info():
     """
     Prints configuration information when demuxer starts
     """
@@ -95,7 +111,7 @@ def print_info():
     elif INPUT_MODE == "goesrecv":
         m = "goesrecv (github.com/pietern/goestools)"
     elif INPUT_MODE == "file":
-        m = "File"
+        m = "File ({})".format(args.file)
     else:
         m = "UNKNOWN"
     
@@ -136,8 +152,10 @@ def config_input():
         exit()
 
     elif INPUT_MODE == "file":
-        print("File input is WIP\nExiting...")
-        exit()
+        global vcduFile
+        
+        fpath = args.file
+        vcduFile = open(fpath, 'rb')
 
     else:
         print("UNKNOWN INPUT MODE: \"{}\"".format(INPUT_MODE))
@@ -151,7 +169,7 @@ def start_osp_channel_client(ipport):
     """
 
     try:
-        channelClient.connect(ipport)
+        ospChannelClient.connect(ipport)
     except socket.error as e:
         if e.errno == 10061:
             print("  Virtual Channel: CONNECTION REFUSED")
@@ -163,14 +181,13 @@ def start_osp_channel_client(ipport):
 
     print("  Virtual Channel (TCP {}): CONNECTED".format(ipport[1]))
 
-
 def start_osp_stats_client(ipport):
     """
     Connect TCP socket to OSP decoder virtual channel port
     """
 
     try:
-        statsClient.connect(ipport)
+        ospStatsClient.connect(ipport)
     except socket.error as e:
         if e.errno == 10061:
             print("  Statistics: CONNECTION REFUSED")
