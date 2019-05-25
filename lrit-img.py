@@ -14,6 +14,7 @@ import sys
 
 argparser = argparse.ArgumentParser(description="Extracts image data from LRIT IMG file.")
 argparser.add_argument("INPUT", action="store", help="LRIT file (or folder) to process")
+argparser.add_argument("-s", action="store_true", help="Processes incomplete images as individual segments")
 args = argparser.parse_args()
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -69,10 +70,14 @@ def init():
                 print("    Found {} of {} segments".format(foundSegments, totalSegments))
             else:
                 print("    MISSING {} SEGMENTS".format(totalSegments - foundSegments))
-                print("    IMAGE GENERATION WILL BE SKIPPED")
 
-                # Remove image group from list
-                groups.pop(img, None)
+                if args.s:
+                    # Process as individual segments
+                    print("    PROCESSING AS INDIVIDUAL SEGMENTS")
+                else:
+                    # Remove image group from list
+                    groups.pop(img, None)
+                    print("    IMAGE GENERATION WILL BE SKIPPED")
             
             # Check image has not already been generated
             if os.path.isfile(args.INPUT + "\\" + name + ".jpg"):
@@ -89,8 +94,13 @@ def init():
             # Get group details
             name, mode, segment = parse_fname(groups[img][0])
 
-            process_group(name, mode, groups[img])
-            print("\n")
+            if args.s:
+                for seg in groups[img]:
+                    process_single_segment(seg)
+                    print()
+            else:
+                process_group(name, mode, groups[img])
+                print("\n")
     else:
         # Load and process single file
         process_single_segment(args.INPUT)
@@ -168,7 +178,7 @@ def process_single_segment(fpath):
     # Create image and save to disk
     buf = io.BytesIO(dataField)
     img = Image.open(buf)
-    outFName = args.INPUT + ".jpg"
+    outFName = fpath + ".jpg"
     img.save(outFName)
     print("Saved image: \"{}\"".format(outFName))
 
