@@ -7,6 +7,8 @@ It broadcasts meteorological data to end-users via two L-band (~1.69 GHz) downli
 
 These downlinks can be received with an inexpensive hardware setup and some open-source software. This repo contains part of the software required for receiving these weather images.
 
+**These tools are under active development and testing. They are not user-friendly and require commands to be run manually to get images. Once the code is bug-free and has been thoroughly tested I will automate the process and write a setup guide.**
+
 More information can be found in [these blog posts on my site](https://vksdr.com/t/coms-1).
 
 | Component     | Description   | Dependencies  |
