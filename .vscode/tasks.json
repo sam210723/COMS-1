@@ -6,19 +6,19 @@
         {
             "label": "LRIT Demux (config)",
             "type": "shell",
-            "command": "cd demux; python lrit-demux.py",
+            "command": "python demux/lrit-demux.py --config demux/lrit-demux.ini",
             "problemMatcher": []
         },
         {
             "label": "LRIT Demux (file)",
             "type": "shell",
-            "command": "cd demux; python lrit-demux.py --file ../samples/vcdu.bin",
+            "command": "python demux/lrit-demux.py --config demux/lrit-demux.ini --file samples/vcdu.bin",
             "problemMatcher": []
         },
         {
             "label": "UDP Bridge",
             "type": "shell",
-            "command": "python demux/udp-bridge.py 4999 5000",
+            "command": "python udp-bridge/udp-bridge.py 4999 5000",
             "problemMatcher": []
         }
     ]
