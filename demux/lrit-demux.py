@@ -56,7 +56,8 @@ ospChannelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # File source
 vcduFile = None
 
-demux = Demuxer(DOWNLINK, DIRS)
+#demux = Demuxer(DOWNLINK, DIRS)
+demux = Demuxer()
 
 
 def init():
@@ -67,10 +68,13 @@ def init():
     
     print_config_info()
     config_dirs()
-    config_input()   
+    config_input()
+
+    if demux.coreReady:
+        print("DEMUXER CORE THREAD READY")
 
     print("──────────────────────────────────────────────────────────────────────────────────\n")
-    print("Waiting for Virtual Channel to change...")
+    print("WAITING FOR NEW xRIT DATA...")
 
     # Main loop
     loop()
