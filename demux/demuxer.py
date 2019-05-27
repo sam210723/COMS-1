@@ -4,7 +4,7 @@ https://github.com/sam210723/COMS-1
 """
 
 from threading import Thread
-from queue import Queue
+from collections import deque
 
 from VCDU import VCDU
 
@@ -18,30 +18,35 @@ class Demuxer:
         Initialises demuxer class
         """
         
-        # Configure instance global
-        self.rxbuf = b''               # Data receive queue
-        self.coreReady = False         # Core thread ready state
-
-        # Start core demuxer thread
-        demux_thread = Thread(name="DEMUXER CORE")
-        demux_thread.run = self.demux_core
-        demux_thread.start()
+        # Configure instance globals
+        self.rxq = deque()             # Data receive queue
     
 
-    def data_in(self, packet):
+    def new_packet(self):
+        """
+        Called from rx_push() when new packet is added to queue
+        """
+
+        return
+
+
+    def rx_push(self, packet):
         """
         Takes in VCDUs for the demuxer to process
         :param packet: 892 byte Virtual Channel Data Unit (VCDU)
         """
 
-        # Add packet to receive buffer
-        self.rxbuf += packet
-    
+        self.rxq.append(packet)
 
-    def demux_core(self):
+
+    def rx_pull(self):
         """
-        Demuxer core thread function
+        Pull data from receive queue
         """
 
-        self.coreReady = True
-        return
+        try:
+            # Return top item
+            return self.rxq.popleft()
+        except IndexError:
+            # Queue empty
+            return None

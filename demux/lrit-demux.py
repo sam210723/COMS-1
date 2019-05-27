@@ -70,9 +70,6 @@ def init():
     config_dirs()
     config_input()
 
-    if demux.coreReady:
-        print("DEMUXER CORE THREAD READY")
-
     print("──────────────────────────────────────────────────────────────────────────────────\n")
     print("WAITING FOR NEW xRIT DATA...")
 
@@ -98,7 +95,7 @@ def loop():
                 print("\n\nREACHED END OF INPUT FILE\nExiting...")
                 exit()
 
-        demux.data_in(channelData)
+        demux.rx_push(channelData)
         #stats.data_in(statsData)
 
 
