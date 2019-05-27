@@ -9,6 +9,7 @@ import argparse
 from configparser import ConfigParser
 import os
 import socket
+from time import time
 
 from demuxer import Demuxer
 #from statistics import Statistics
@@ -25,11 +26,13 @@ cfgparser = ConfigParser()
 cfgparser.read(args.config)
 
 # Set global variables
-BUFFER_LEN = 1024
+BUFFER_LEN = 892
 SPACECRAFT = "COMS-1"
 DOWNLINK = "LRIT"
 OUTPUT_ROOT = cfgparser.get('demuxer', 'output')
+START_TIME = None
 
+# If input file path is specified, ignore config input type and use file
 if args.file == None:
     INPUT_MODE = cfgparser.get('demuxer', 'input')
 else:
@@ -51,13 +54,12 @@ DIRS = [DIR_ROOT, DIR_LRIT, DIR_LRIT_IMG, DIR_LRIT_IMG_FD, DIR_LRIT_IMG_ENH, DIR
 
 # TCP Clients
 ospChannelClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#ospStatsClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # File source
 vcduFile = None
 
 #demux = Demuxer(DOWNLINK, DIRS)
-demux = Demuxer()
+demux = Demuxer(DOWNLINK)
 
 
 def init():
@@ -70,10 +72,19 @@ def init():
     config_dirs()
     config_input()
 
-    print("──────────────────────────────────────────────────────────────────────────────────\n")
-    print("WAITING FOR NEW xRIT DATA...")
+    if demux.coreReady:
+        print("DEMUXER CORE THREAD READY")
+    else:
+        print("DEMUXER CORE THREAD NOT STARTED\nExiting...")
+        exit()
 
-    # Main loop
+    print("──────────────────────────────────────────────────────────────────────────────────\n")
+
+    # Get start time
+    global START_TIME
+    START_TIME = time()
+
+    # Enter main loop
     loop()
 
 
@@ -85,18 +96,34 @@ def loop():
     while True:
         if INPUT_MODE == "osp":
             channelData = ospChannelClient.recv(BUFFER_LEN)
-            #statsData = ospStatsClient.recv(BUFFER_LEN)
+            demux.push(channelData)
+
         elif INPUT_MODE == "goesrecv":
+            # Not implemented yet
             return
+
         elif INPUT_MODE == "file":
-            channelData = vcduFile.read(892)
+            if not vcduFile.closed:
+                # Read VCDU from file
+                channelData = vcduFile.read(BUFFER_LEN)
 
-            if channelData == b'':
-                print("\n\nREACHED END OF INPUT FILE\nExiting...")
-                exit()
-
-        demux.rx_push(channelData)
-        #stats.data_in(statsData)
+                # No more VCDUs to be read from file
+                if channelData == b'':
+                    print("INPUT FILE LOADED")
+                    vcduFile.close()
+                    continue
+                
+                # Push VCDU to demuxer
+                demux.push(channelData)
+            else:
+                # Demuxer has all VCDUs from file, wait for processing to finish
+                if demux.complete():
+                    runTime = round(time() - START_TIME, 3)
+                    print("FINISHED PROCESSING FILE ({}s)\nExiting...".format(runTime))
+                    
+                    # Stop core thread
+                    demux.stop()
+                    exit()
 
 
 def print_config_info():
@@ -142,12 +169,10 @@ def config_input():
         # Get OSP details from config file
         ospIP = cfgparser.get('osp', 'ip')
         ospChannelPort = int(cfgparser.get('osp', 'vchan'))
-        #ospStatsPort = int(cfgparser.get('osp', 'stats'))
 
         # Start TCP clients for OSP
         print("Connecting to Open Satellite Project ({})...".format(ospIP))
-        start_osp_channel_client((ospIP, ospChannelPort))
-        #start_osp_stats_client((ospIP, ospStatsPort))
+        osp_start_channel_client((ospIP, ospChannelPort))
 
     elif INPUT_MODE == "goesrecv":
         print("Not implemented\nExiting...")
@@ -155,9 +180,7 @@ def config_input():
 
     elif INPUT_MODE == "file":
         global vcduFile
-        
-        fpath = args.file
-        vcduFile = open(fpath, 'rb')
+        vcduFile = open(args.file, 'rb')
 
     else:
         print("UNKNOWN INPUT MODE: \"{}\"".format(INPUT_MODE))
@@ -165,7 +188,7 @@ def config_input():
         exit()
 
 
-def start_osp_channel_client(ipport):
+def osp_start_channel_client(ipport):
     """
     Connect TCP socket to OSP decoder virtual channel port
     """
@@ -183,28 +206,11 @@ def start_osp_channel_client(ipport):
 
     print("  Virtual Channel (TCP {}): CONNECTED".format(ipport[1]))
 
-def start_osp_stats_client(ipport):
-    """
-    Connect TCP socket to OSP decoder virtual channel port
-    """
-
-    try:
-        ospStatsClient.connect(ipport)
-    except socket.error as e:
-        if e.errno == 10061:
-            print("  Statistics: CONNECTION REFUSED")
-        else:
-            print(e)
-        
-        print("\nExiting...")
-        exit()
-
-    print("  Statistics (TCP {}): CONNECTED".format(ipport[1]))
-
 
 # Catch keyboard interrupt
 try:
     init()
 except KeyboardInterrupt as e:
+    demux.stop()
     print("Exiting...")
     exit()
