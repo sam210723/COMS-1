@@ -7,7 +7,7 @@ from collections import deque
 from time import sleep
 from threading import Thread
 
-from VCDU import VCDU
+from CCSDS_VCDU import VCDU
 
 class Demuxer:
     """
