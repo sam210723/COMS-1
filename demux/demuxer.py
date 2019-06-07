@@ -3,15 +3,15 @@ demuxer.py
 https://github.com/sam210723/COMS-1
 """
 
-from threading import Thread
-import time
 from collections import deque
+from time import sleep
+from threading import Thread
 
 from VCDU import VCDU
 
 class Demuxer:
     """
-    Coordinates CCSDS demultiplexing of virtual channels into xRIT files.
+    Coordinates demultiplexing of CCSDS virtual channels into xRIT files.
     """
 
     def __init__(self, downlink):
@@ -53,7 +53,7 @@ class Demuxer:
                 continue
             else:
                 # No packet available, sleep thread
-                time.sleep(self.coreWait / 1000)
+                sleep(self.coreWait / 1000)
         
         # Gracefully exit core thread
         if self.coreStop:
