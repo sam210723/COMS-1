@@ -50,7 +50,7 @@ class S_PDU:
         return
 
 
-class XRIT:
+class xRIT:
     """
     Parses and assembles CCSDS xRIT Files (xRIT_Data)
     """
