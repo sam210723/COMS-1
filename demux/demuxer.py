@@ -3,11 +3,10 @@ demuxer.py
 https://github.com/sam210723/COMS-1
 """
 
+import CCSDS
 from collections import deque
 from time import sleep
 from threading import Thread
-
-from CCSDS_VCDU import VCDU
 
 class Demuxer:
     """
