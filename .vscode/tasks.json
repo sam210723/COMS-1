@@ -4,15 +4,15 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "LRIT Demux (config)",
+            "label": "xRIT Demux (config)",
             "type": "shell",
-            "command": "python demux/lrit-demux.py --config demux/lrit-demux.ini",
+            "command": "python demux/xrit-demux.py --config demux/lrit-demux.ini",
             "problemMatcher": []
         },
         {
-            "label": "LRIT Demux (file)",
+            "label": "xRIT Demux (file)",
             "type": "shell",
-            "command": "python demux/lrit-demux.py --config demux/lrit-demux.ini --file samples/vcdu.bin",
+            "command": "python demux/xrit-demux.py --config demux/lrit-demux.ini --file samples/vcdu.bin",
             "problemMatcher": []
         },
         {
