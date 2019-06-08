@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 from demuxer import Demuxer
 from os import mkdir, path
+import socket
 from time import time
 from tools import new_dir_exists
 
@@ -20,6 +21,9 @@ source = None
 downlink = None
 output = None
 packetf = None
+sck = None
+buflen = 892
+demux = None
 
 def init():
     print("┌───────────────────────────────────┐")
@@ -30,6 +34,7 @@ def init():
     global args
     global config
     global stime
+    global demux
 
     # Handle arguments and config file
     args = parse_args()
@@ -39,6 +44,14 @@ def init():
     # Configure directories and input source
     dirs()
     config_input()
+
+    # Create demuxer instance
+    demux = Demuxer(downlink)
+
+    # Check demuxer thread is ready
+    if not demux.coreReady:
+        print("DEMUXER CORE THREAD FAILED TO START\nExiting...")
+        exit()
 
     print("──────────────────────────────────────────────────────────────────────────────────\n")
 
@@ -53,8 +66,15 @@ def loop():
     """
     Handle data from the selected input source
     """
+    global source
 
-    return
+    while True:
+        if source == "OSP":
+            global sck
+            global buflen
+
+            data = sck.recv(buflen)
+            demux.push(data)
 
 
 def config_input():
@@ -63,9 +83,18 @@ def config_input():
     """
 
     global source
+    global sck
 
     if source == "OSP":
-        return
+        sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        ip = config.get('osp', 'ip')
+        port = int(config.get('osp', 'vchan'))
+        addr = (ip, port)
+
+        print("Connecting to Open Satellite Project ({})...".format(ip), end='')
+        connect_socket(addr)
+
     elif source == "GOESRECV":
         print("Not implemented\nExiting...")
         exit()
@@ -73,10 +102,29 @@ def config_input():
     elif source == "FILE":
         global packetf
         packetf = open(args.file, 'rb')
+        print("Opened file: \"{}\"".format(args.file))
 
     else:
         print("UNKNOWN INPUT MODE: \"{}\"".format(source))
         print("Exiting...")
+        exit()
+
+
+def connect_socket(addr):
+    """
+    Connect TCP socket to address and handle exceptions
+    """
+
+    try:
+        sck.connect(addr)
+        print("CONNECTED")
+    except socket.error as e:
+        if e.errno == 10061:
+            print("CONNECTION REFUSED")
+        else:
+            print(e)
+    
+        print("\nExiting...")
         exit()
 
 
