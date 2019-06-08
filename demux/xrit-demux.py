@@ -11,7 +11,6 @@ from demuxer import Demuxer
 from os import mkdir, path
 import socket
 from time import time
-from tools import new_dir_exists
 
 # Globals
 args = None

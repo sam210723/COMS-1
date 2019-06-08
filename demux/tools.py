@@ -32,19 +32,3 @@ def get_bits_int(data, start, length, count):
     bits = get_bits(data, start, length, count)
 
     return int(bits, 2)
-
-
-def new_dir_exists(path):
-    """
-    Create new directory if it doesn't exist already
-    :param path: Absolute directory path
-    """
-
-    if not os.path.isdir(path):
-        try:
-            os.mkdir(path)
-            return True
-        except OSError as e:
-            return e.errno
-    else:
-        return True
