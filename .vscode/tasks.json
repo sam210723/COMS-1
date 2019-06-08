@@ -6,13 +6,13 @@
         {
             "label": "xRIT Demux (config)",
             "type": "shell",
-            "command": "python demux/xrit-demux.py --config demux/lrit-demux.ini",
+            "command": "python demux/xrit-demux.py --config demux/xrit-demux.ini",
             "problemMatcher": []
         },
         {
             "label": "xRIT Demux (file)",
             "type": "shell",
-            "command": "python demux/xrit-demux.py --config demux/lrit-demux.ini --file samples/vcdu.bin",
+            "command": "python demux/xrit-demux.py --config demux/xrit-demux.ini --file samples/vcdu.bin",
             "problemMatcher": []
         },
         {
