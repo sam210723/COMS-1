@@ -16,9 +16,17 @@ from tools import new_dir_exists
 args = None
 config = None
 stime = None
+source = None
+downlink = None
+output = None
 
 
 def init():
+    print("┌───────────────────────────────────┐")
+    print("│        COMS-1 xRIT Demuxer        │")
+    print("│    github.com/sam210723/COMS-1    │")
+    print("└───────────────────────────────────┘\n")
+    
     global args
     global config
     global stime
@@ -26,7 +34,9 @@ def init():
     # Handle arguments and config file
     args = parse_args()
     config = parse_config(args.config)
+    print_config()
 
+    # Configure directories
     dirs()
 
     # Get processing start time
@@ -38,23 +48,21 @@ def dirs():
     Configures directories for demuxed files
     """
 
-    global config
-    root = config.get('demuxer', 'output')
-
     paths = [
-        root,
-        root + "/LRIT",
-        root + "/LRIT/IMG",
-        root + "/LRIT/IMG/FD",
-        root + "/LRIT/IMG/ENH",
-        root + "/LRIT/IMG/LSH",
-        root + "/LRIT/ADD",
-        root + "/LRIT/ADD/ANT",
-        root + "/LRIT/ADD/GOCI",
-        root + "/LRIT/ADD/NWP",
-        root + "/LRIT/ADD/TYP",
+        output,
+        output + "/LRIT",
+        output + "/LRIT/IMG",
+        output + "/LRIT/IMG/FD",
+        output + "/LRIT/IMG/ENH",
+        output + "/LRIT/IMG/LSH",
+        output + "/LRIT/ADD",
+        output + "/LRIT/ADD/ANT",
+        output + "/LRIT/ADD/GOCI",
+        output + "/LRIT/ADD/NWP",
+        output + "/LRIT/ADD/TYP",
     ]
 
+    print()
     # Loop through paths in list
     for p in paths:
         absp = path.abspath(p)
@@ -87,10 +95,54 @@ def parse_config(path):
     Parses configuration file
     """
 
+    global source
+    global downlink
+    global output
+
     cfgp = ConfigParser()
     cfgp.read(path)
 
+    if args.file == None:
+        source = cfgp.get('demuxer', 'input').upper()
+    else:
+        source = "FILE"
+    
+    downlink = cfgp.get('demuxer', 'mode').upper()
+    output = cfgp.get('demuxer', 'output')
+
     return cfgp
+
+
+def print_config():
+    """
+    Prints configuration information
+    """
+
+    global downlink
+    global output
+
+    print("SPACECRAFT:       COMS-1")
+
+    if downlink == "LRIT":
+        rate = "64 kbps"
+    elif downlink == "HRIT":
+        rate = "3 Mbps"
+    print("DOWNLINK:         {} ({})".format(downlink, rate))
+
+    if source == "OSP":
+        s = "Open Satellite Project (github.com/opensatelliteproject/xritdemod)"
+    elif source == "GOESRECV":
+        s = "goesrecv (github.com/pietern/goestools)"
+    elif source == "FILE":
+        s = "File ({})".format(args.file)
+    else:
+        s = "UNKNOWN"
+
+    print("INPUT SOURCE:     {}".format(s))
+    
+    absp = path.abspath(output)
+    absp = absp[0].upper() + absp[1:]  # Fix lowercase drive letter
+    print("OUTPUT PATH:      {}".format(absp))
 
 
 try:
