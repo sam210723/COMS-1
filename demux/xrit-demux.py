@@ -19,7 +19,7 @@ stime = None
 source = None
 downlink = None
 output = None
-
+packetf = None
 
 def init():
     print("┌───────────────────────────────────┐")
@@ -36,11 +36,48 @@ def init():
     config = parse_config(args.config)
     print_config()
 
-    # Configure directories
+    # Configure directories and input source
     dirs()
+    config_input()
+
+    print("──────────────────────────────────────────────────────────────────────────────────\n")
 
     # Get processing start time
     stime = time()
+
+    # Enter main loop
+    loop()
+
+
+def loop():
+    """
+    Handle data from the selected input source
+    """
+
+    return
+
+
+def config_input():
+    """
+    Configures the selected input source
+    """
+
+    global source
+
+    if source == "OSP":
+        return
+    elif source == "GOESRECV":
+        print("Not implemented\nExiting...")
+        exit()
+
+    elif source == "FILE":
+        global packetf
+        packetf = open(args.file, 'rb')
+
+    else:
+        print("UNKNOWN INPUT MODE: \"{}\"".format(source))
+        print("Exiting...")
+        exit()
 
 
 def dirs():
