@@ -66,6 +66,7 @@ def loop():
     """
     Handle data from the selected input source
     """
+    global demux
     global source
 
     while True:
@@ -75,6 +76,34 @@ def loop():
 
             data = sck.recv(buflen)
             demux.push(data)
+        elif source == "GOESRECV":
+            return
+
+        elif source == "FILE":
+            global packetf
+            global stime
+
+            if not packetf.closed:
+                # Read VCDU from file
+                data = packetf.read(buflen)
+
+                # No more data to read from file
+                if data == b'':
+                    print("INPUT FILE LOADED")
+                    packetf.close()
+                    continue
+                
+                # Push VCDU to demuxer
+                demux.push(data)
+            else:
+                # Demuxer has all VCDUs from file, wait for processing
+                if demux.complete():
+                    runTime = round(time() - stime, 3)
+                    print("FINISHED PROCESSING FILE ({}s)\nExiting...".format(runTime))
+                    
+                    # Stop core thread
+                    demux.stop()
+                    exit()
 
 
 def config_input():
@@ -233,6 +262,6 @@ def print_config():
 try:
     init()
 except KeyboardInterrupt:
-    #demux.stop()
+    demux.stop()
     print("Exiting...")
     exit()
