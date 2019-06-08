@@ -1,5 +1,5 @@
 """
-lrit-demux.py
+xrit-demux.py
 https://github.com/sam210723/COMS-1
 
 Frontend for CCSDS demultiplexer
@@ -9,8 +9,6 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 from demuxer import Demuxer
 
-SPACECRAFT = "COMS-1"
-DOWNLINK = "LRIT"
 
 def init():
     args = parse_args()
@@ -44,6 +42,6 @@ def parse_config(path):
 try:
     init()
 except KeyboardInterrupt:
-    demux.stop()
+    #demux.stop()
     print("Exiting...")
     exit()
