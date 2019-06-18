@@ -63,20 +63,23 @@ def init():
 
 def loop():
     """
-    Handle data from the selected input source
+    Handles data from the selected input source
     """
     global demux
     global source
+    global sck
+    global buflen
 
     while True:
         if source == "OSP":
-            global sck
-            global buflen
-
             data = sck.recv(buflen)
             demux.push(data)
+        
         elif source == "GOESRECV":
-            return
+            data = sck.recv(buflen + 8)
+
+            if len(data) == buflen + 8:
+                demux.push(data[8:])
 
         elif source == "FILE":
             global packetf
@@ -124,8 +127,15 @@ def config_input():
         connect_socket(addr)
 
     elif source == "GOESRECV":
-        print("Not implemented\nExiting...")
-        exit()
+        sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        ip = config.get('goesrecv', 'ip')
+        port = int(config.get('goesrecv', 'vchan'))
+        addr = (ip, port)
+
+        print("Connecting to goesrecv ({})...".format(ip), end='')
+        connect_socket(addr)
+        nanomsg_init()
 
     elif source == "FILE":
         global packetf
@@ -140,7 +150,7 @@ def config_input():
 
 def connect_socket(addr):
     """
-    Connect TCP socket to address and handle exceptions
+    Connects TCP socket to address and handle exceptions
     """
 
     try:
@@ -153,6 +163,22 @@ def connect_socket(addr):
             print(e)
     
         print("\nExiting...")
+        exit()
+
+
+def nanomsg_init():
+    """
+    Sets up nanomsg publisher in goesrecv to send VCDUs over TCP
+    """
+
+    global sck
+
+    sck.send(b'\x00\x53\x50\x00\x00\x21\x00\x00')
+    nmres = sck.recv(8)
+
+    # Check nanomsg response
+    if nmres != b'\x00\x53\x50\x00\x00\x20\x00\x00':
+        print("  ERROR CONFIGURING NANOMSG (BAD RESPONSE)\n  Exiting...\n")
         exit()
 
 
