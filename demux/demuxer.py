@@ -22,8 +22,8 @@ class Demuxer:
         self.rxq = deque()             # Data receive queue
         self.coreReady = False         # Core thread ready state
         self.coreStop = False          # Core thread stop flag
-        self.vcidThreads = []          # List of VCID demux threads
-        
+        self.channelHandlers = {}
+
         if downlink == "LRIT":
             self.coreWait = 54         # Core loop delay in ms for LRIT (108.8ms per packet @ 64 kbps)
         elif downlink == "HRIT":
@@ -34,7 +34,6 @@ class Demuxer:
         demux_thread.name = "DEMUX CORE"
         demux_thread.run = self.demux_core
         demux_thread.start()
-
 
     def demux_core(self):
         """
@@ -51,8 +50,18 @@ class Demuxer:
             if packet != None:
                 # Parse VCDU
                 vcdu = CCSDS.VCDU(packet)
-                vcdu.print_info()
 
+                # Check channel handler for current VCID exists
+                try:
+                    vch = self.channelHandlers[vcdu.VCID]
+                except KeyError:
+                    # Create new channel handler instance
+                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID)
+                    vch = self.channelHandlers[vcdu.VCID]
+                
+                # Pass VCDU to channel handler
+                vch.push(vcdu)
+                
             else:
                 # No packet available, sleep thread
                 sleep(self.coreWait / 1000)
@@ -60,7 +69,6 @@ class Demuxer:
         # Gracefully exit core thread
         if self.coreStop:
             return
-    
 
     def push(self, packet):
         """
@@ -98,3 +106,26 @@ class Demuxer:
         """
 
         self.coreStop = True
+
+
+class Channel:
+    """
+    Virtual channel data handler
+    """
+
+    def __init__(self, vcid):
+        """
+        Initialises virtual channel data handler
+        :param vcid: Virtual Channel ID
+        """
+
+        self.VCID = vcid
+    
+
+    def data_in(self, vcdu):
+        """
+        Takes in VCDUs for the channel handler to process
+        :param packet: Parsed VCDU object
+        """
+
+        vcdu.print_info()
