@@ -22,6 +22,7 @@ class Demuxer:
         self.rxq = deque()             # Data receive queue
         self.coreReady = False         # Core thread ready state
         self.coreStop = False          # Core thread stop flag
+        self.vcidThreads = []          # List of VCID demux threads
         
         if downlink == "LRIT":
             self.coreWait = 54         # Core loop delay in ms for LRIT (108.8ms per packet @ 64 kbps)
@@ -48,8 +49,10 @@ class Demuxer:
             packet = self.pull()
 
             if packet != None:
-                # Packet available
-                continue
+                # Parse VCDU
+                vcdu = CCSDS.VCDU(packet)
+                vcdu.print_info()
+
             else:
                 # No packet available, sleep thread
                 sleep(self.coreWait / 1000)
