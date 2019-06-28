@@ -101,7 +101,7 @@ def loop():
                 # Demuxer has all VCDUs from file, wait for processing
                 if demux.complete():
                     runTime = round(time() - stime, 3)
-                    print("FINISHED PROCESSING FILE ({}s)\nExiting...".format(runTime))
+                    print("\nFINISHED PROCESSING FILE ({}s)\nExiting...".format(runTime))
                     
                     # Stop core thread
                     demux.stop()
@@ -187,33 +187,18 @@ def dirs():
     Configures directories for demuxed files
     """
 
-    paths = [
-        output,
-        output + "/LRIT",
-        output + "/LRIT/IMG",
-        output + "/LRIT/IMG/FD",
-        output + "/LRIT/IMG/ENH",
-        output + "/LRIT/IMG/LSH",
-        output + "/LRIT/ADD",
-        output + "/LRIT/ADD/ANT",
-        output + "/LRIT/ADD/GOCI",
-        output + "/LRIT/ADD/NWP",
-        output + "/LRIT/ADD/TYP",
-    ]
+    absp = path.abspath(output)
+    
+    # Create output directory if it doesn't exist already
+    if not path.isdir(absp):
+        try:
+            mkdir(absp)
+            mkdir(absp + "/LRIT")
 
-    print()
-    # Loop through paths in list
-    for p in paths:
-        absp = path.abspath(p)
-        
-        # Create new directory if it doesn't exist already
-        if not path.isdir(absp):
-            try:
-                mkdir(absp)
-                print("Created: {}".format(p))
-            except OSError as e:
-                print("Error creating output folders\n{}\n\nExiting...".format(e))
-                exit()
+            print("Created output folder")
+        except OSError as e:
+            print("Error creating output folder\n{}\n\nExiting...".format(e))
+            exit()
 
 
 def parse_args():
@@ -282,7 +267,7 @@ def print_config():
     
     absp = path.abspath(output)
     absp = absp[0].upper() + absp[1:]  # Fix lowercase drive letter
-    print("OUTPUT PATH:      {}".format(absp))
+    print("OUTPUT PATH:      {}\n".format(absp))
 
 
 try:
