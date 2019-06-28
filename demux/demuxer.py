@@ -38,7 +38,7 @@ class Demuxer:
 
     def demux_core(self):
         """
-        Demuxer core thread entry point
+        Distributes VCDUs to channel handlers.
         """
         
         # Indicate core thread has initialised
@@ -48,6 +48,7 @@ class Demuxer:
         lastVCID = None             # Last VCID seen
         seenVCIDChange = False      # Seen changed in VCID flag
 
+        # Thread loop
         while not self.coreStop:
             # Pull next packet from queue
             packet = self.pull()
@@ -64,28 +65,24 @@ class Demuxer:
                         print("WAITING FOR VCID TO CHANGE")
                     lastVCID = vcdu.VCID
                     continue
-
                 elif lastVCID == vcdu.VCID:         # VCID has not changed
-                    # Never seen VCID change, ignore data
-                    # Avoids starting demux part way through a TP_File
-                    if not seenVCIDChange: continue
-                    
+                    if not seenVCIDChange:
+                        continue                    # Never seen VCID change, ignore data (avoids partial TP_Files)
+                    else:
+                        pass
                 elif lastVCID != vcdu.VCID:         # VCID has changed
                     if self.verbose: vcdu.print_info()
                     seenVCIDChange = True
                     lastVCID = vcdu.VCID
                 
-
                 # Check channel handler for current VCID exists
                 try:
                     self.channelHandlers[vcdu.VCID]
                 except KeyError:
                     # Create new channel handler instance
                     self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose)
+                    if self.verbose: print("CREATED NEW CHANNEL HANDLER")
 
-                    if self.verbose:
-                        print("CREATED NEW CHANNEL HANDLER")
-                
                 # Pass VCDU to appropriate channel handler
                 self.channelHandlers[vcdu.VCID].data_in(vcdu)
                 
@@ -146,9 +143,10 @@ class Channel:
         :param vcid: Virtual Channel ID
         """
 
-        self.VCID = vcid
-        self.verbose = v
-        self.counter = -1
+        self.VCID = vcid            # VCID handler is responsible for
+        self.verbose = v            # Verbose output flag
+        self.counter = -1           # Last VCDU packet counter
+        self.DROPPED = 0            # Dropped packet count
     
 
     def data_in(self, vcdu):
@@ -158,16 +156,35 @@ class Channel:
         """
 
         # Check VCDU continuity
-        if self.counter != -1:
-            diff = vcdu.COUNTER - self.counter
-            if diff != 1:
-                print("  DROPPED {} FRAMES    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
-        
-        self.counter = vcdu.COUNTER
+        self.VCDU_C(vcdu)
 
 
         # Parse M_PDU
         mpdu = CCSDS.M_PDU(vcdu.MPDU)
 
-        if self.verbose:
-            mpdu.print_info()
+        # If M_PDU contains CP_PDU header
+        if mpdu.HEADER:
+            # Parse CP_PDU header
+            pass
+        else:
+            # Append packet to current CP_PDU
+            pass
+
+        if self.verbose: mpdu.print_info()
+    
+
+    def VCDU_C(self, vcdu):
+        """
+        Checks VCDU packet continuity by comparing packet counters
+        """
+        
+        # If at least one VCDU has been received
+        if self.counter != -1:
+            diff = vcdu.COUNTER - self.counter - 1
+            
+            if diff != 0:
+                self.DROPPED += diff
+                print("  DROPPED {} PACKETS  (TOTAL: {})".format(diff, self.DROPPED))
+                #print("  DROPPED {} PACKETS    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
+        
+        self.counter = vcdu.COUNTER
