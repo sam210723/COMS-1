@@ -13,16 +13,16 @@ import socket
 from time import time
 
 # Globals
-args = None
-config = None
-stime = None
-source = None
-downlink = None
-output = None
-packetf = None
-sck = None
-buflen = 892
-demux = None
+args = None             # Parsed CLI arguments
+config = None           # Config parser object
+stime = None            # Processing start time
+source = None           # Input source type
+downlink = None         # Downlink type (LRIT/HRIT)
+output = None           # Data output path
+packetf = None          # Packet file object
+sck = None              # TCP socket object
+buflen = 892            # Input buffer length (1 VCDU)
+demux = None            # Demuxer class object
 
 def init():
     print("┌───────────────────────────────────┐")
@@ -45,7 +45,7 @@ def init():
     config_input()
 
     # Create demuxer instance
-    demux = Demuxer(downlink)
+    demux = Demuxer(downlink, args.v)
 
     # Check demuxer thread is ready
     if not demux.coreReady:
@@ -220,12 +220,13 @@ def parse_args():
     """
     Parses command line arguments
     """
-
+    
     argp = ArgumentParser()
     argp.description = "Frontend for CCSDS demultiplexer"
     argp.add_argument("--config", action="store", help="Configuration file path (.ini)", default="xrit-demux.ini")
     argp.add_argument("--file", action="store", help="Path to VCDU packet file", default=None)
-    
+    argp.add_argument("-v", action="store_true", help="Enable verbose console output (only useful for debugging)", default=False)
+
     return argp.parse_args()
 
 

@@ -13,21 +13,22 @@ class Demuxer:
     Coordinates demultiplexing of CCSDS virtual channels into xRIT files.
     """
 
-    def __init__(self, downlink):
+    def __init__(self, downlink, v):
         """
         Initialises demuxer class
         """
         
         # Configure instance globals
-        self.rxq = deque()             # Data receive queue
-        self.coreReady = False         # Core thread ready state
-        self.coreStop = False          # Core thread stop flag
-        self.channelHandlers = {}
+        self.rxq = deque()              # Data receive queue
+        self.coreReady = False          # Core thread ready state
+        self.coreStop = False           # Core thread stop flag
+        self.verbose = v                # Verbose output flag
+        self.channelHandlers = {}       # List of channel handlers
 
         if downlink == "LRIT":
-            self.coreWait = 54         # Core loop delay in ms for LRIT (108.8ms per packet @ 64 kbps)
+            self.coreWait = 54          # Core loop delay in ms for LRIT (108.8ms per packet @ 64 kbps)
         elif downlink == "HRIT":
-            self.coreWait = 1          # Core loop delay in ms for HRIT (2.2ms per packet @ 3 Mbps)
+            self.coreWait = 1           # Core loop delay in ms for HRIT (2.2ms per packet @ 3 Mbps)
 
         # Start core demuxer thread
         demux_thread = Thread()
@@ -53,14 +54,13 @@ class Demuxer:
 
                 # Check channel handler for current VCID exists
                 try:
-                    vch = self.channelHandlers[vcdu.VCID]
+                    self.channelHandlers[vcdu.VCID]
                 except KeyError:
                     # Create new channel handler instance
-                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID)
-                    vch = self.channelHandlers[vcdu.VCID]
+                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose)
                 
-                # Pass VCDU to channel handler
-                vch.push(vcdu)
+                # Pass VCDU to appropriate channel handler
+                self.channelHandlers[vcdu.VCID].data_in(vcdu)
                 
             else:
                 # No packet available, sleep thread
@@ -113,13 +113,14 @@ class Channel:
     Virtual channel data handler
     """
 
-    def __init__(self, vcid):
+    def __init__(self, vcid, v):
         """
         Initialises virtual channel data handler
         :param vcid: Virtual Channel ID
         """
 
         self.VCID = vcid
+        self.verbose = v
     
 
     def data_in(self, vcdu):
@@ -128,4 +129,5 @@ class Channel:
         :param packet: Parsed VCDU object
         """
 
-        vcdu.print_info()
+        if self.verbose:
+            vcdu.print_info()
