@@ -45,7 +45,8 @@ class Demuxer:
         self.coreReady = True
 
         # Thread globals
-        lastVCID = None         # Last VCID seen
+        lastVCID = None             # Last VCID seen
+        seenVCIDChange = False      # Seen changed in VCID flag
 
         while not self.coreStop:
             # Pull next packet from queue
@@ -56,10 +57,24 @@ class Demuxer:
                 # Parse VCDU
                 vcdu = CCSDS.VCDU(packet)
 
-                # Print VCID if changed
-                if vcdu.VCID != lastVCID and self.verbose:
-                    vcdu.print_info()
-                lastVCID = vcdu.VCID
+                # Check for VCID change
+                if lastVCID == None:                # First VCDU (demuxer just started)
+                    if self.verbose:
+                        vcdu.print_info()
+                        print("WAITING FOR VCID TO CHANGE")
+                    lastVCID = vcdu.VCID
+                    continue
+
+                elif lastVCID == vcdu.VCID:         # VCID has not changed
+                    # Never seen VCID change, ignore data
+                    # Avoids starting demux part way through a TP_File
+                    if not seenVCIDChange: continue
+                    
+                elif lastVCID != vcdu.VCID:         # VCID has changed
+                    if self.verbose: vcdu.print_info()
+                    seenVCIDChange = True
+                    lastVCID = vcdu.VCID
+                
 
                 # Check channel handler for current VCID exists
                 try:
