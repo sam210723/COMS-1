@@ -7,6 +7,7 @@ import CCSDS
 from collections import deque
 from time import sleep
 from threading import Thread
+from tools import CCITT_LUT
 
 class Demuxer:
     """
@@ -47,6 +48,7 @@ class Demuxer:
         # Thread globals
         lastVCID = None             # Last VCID seen
         seenVCIDChange = False      # Seen changed in VCID flag
+        crclut = CCITT_LUT()        # CP_PDU CRC LUT
 
         # Thread loop
         while not self.coreStop:
@@ -75,13 +77,17 @@ class Demuxer:
                     seenVCIDChange = True
                     lastVCID = vcdu.VCID
                 
+                # Discard fill packets
+                if vcdu.VCID == 63:
+                    continue
+                
                 # Check channel handler for current VCID exists
                 try:
                     self.channelHandlers[vcdu.VCID]
                 except KeyError:
                     # Create new channel handler instance
-                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose)
-                    if self.verbose: print("CREATED NEW CHANNEL HANDLER")
+                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose, crclut)
+                    if self.verbose: print("  CREATED NEW CHANNEL HANDLER\n")
 
                 # Pass VCDU to appropriate channel handler
                 self.channelHandlers[vcdu.VCID].data_in(vcdu)
@@ -137,17 +143,21 @@ class Channel:
     Virtual channel data handler
     """
 
-    def __init__(self, vcid, v):
+    def __init__(self, vcid, v, crclut):
         """
         Initialises virtual channel data handler
         :param vcid: Virtual Channel ID
+        :param crclut: CP_PDU CRC LUT
+        :param v: Verbose output flag
         """
 
-        self.VCID = vcid            # VCID handler is responsible for
+        self.VCID = vcid            # VCID for this handler
+        self.crclut = crclut        # CP_PDU CRC LUT
         self.verbose = v            # Verbose output flag
         self.counter = -1           # Last VCDU packet counter
         self.DROPPED = 0            # Dropped packet count
-    
+        self.cCPPDU = None          # Current CP_PDU object
+
 
     def data_in(self, vcdu):
         """
@@ -156,24 +166,42 @@ class Channel:
         """
 
         # Check VCDU continuity
-        self.VCDU_C(vcdu)
-
+        self.VCDU_Continuity(vcdu)
 
         # Parse M_PDU
         mpdu = CCSDS.M_PDU(vcdu.MPDU)
 
         # If M_PDU contains CP_PDU header
         if mpdu.HEADER:
-            # Parse CP_PDU header
-            pass
+            # If data preceeds header
+            if mpdu.POINTER != 0:
+                # Finish previous CP_PDU
+                prev = mpdu.PACKET[:mpdu.POINTER]
+                lenok, crcok = self.cCPPDU.finish(prev, self.crclut)
+                self.CP_PDU_Check(lenok, crcok)
+                
+                # Create new CP_PDU
+                next = mpdu.PACKET[mpdu.POINTER:]
+                self.cCPPDU = CCSDS.CP_PDU(next)
+
+            else:
+                # First CP_PDU in TP_File
+                # Create new CP_PDU
+                self.cCPPDU = CCSDS.CP_PDU(mpdu.PACKET)
+            
+            # Handle special EOF CP_PDU
+            if self.cCPPDU.is_EOF():
+                self.cCPPDU = None
+            else:
+                if self.verbose:
+                    self.cCPPDU.print_info()
+                    print("    HEADER:     0x{}".format(hex(mpdu.POINTER)[2:].upper()))
         else:
             # Append packet to current CP_PDU
-            pass
-
-        if self.verbose: mpdu.print_info()
+            self.cCPPDU.append(mpdu.PACKET)
     
 
-    def VCDU_C(self, vcdu):
+    def VCDU_Continuity(self, vcdu):
         """
         Checks VCDU packet continuity by comparing packet counters
         """
@@ -188,3 +216,25 @@ class Channel:
                 #print("  DROPPED {} PACKETS    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
         
         self.counter = vcdu.COUNTER
+
+    
+    def CP_PDU_Check(self, lenok, crcok):
+        """
+        Checks length and CRC of finished CP_PDU
+        """
+
+        # Show length error
+        if lenok:
+            print("    LENGTH:     OK")
+        else:
+            ex = self.cCPPDU.LENGTH
+            ac = len(self.cCPPDU.PAYLOAD)
+            diff = ac - ex
+            print("    LENGTH:     ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
+
+        # Show CRC error
+        if crcok:
+            print("    CRC:        OK")
+        else:
+            print("    CRC:        ERROR")
+        print()
