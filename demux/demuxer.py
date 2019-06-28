@@ -44,20 +44,33 @@ class Demuxer:
         # Indicate core thread has initialised
         self.coreReady = True
 
+        # Thread globals
+        lastVCID = None         # Last VCID seen
+
         while not self.coreStop:
             # Pull next packet from queue
             packet = self.pull()
-
+            
+            # If queue is not empty
             if packet != None:
                 # Parse VCDU
                 vcdu = CCSDS.VCDU(packet)
 
+                # Print VCID if changed
+                if vcdu.VCID != lastVCID and self.verbose:
+                    vcdu.print_info()
+                lastVCID = vcdu.VCID
+
                 # Check channel handler for current VCID exists
                 try:
                     self.channelHandlers[vcdu.VCID]
+
                 except KeyError:
                     # Create new channel handler instance
                     self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose)
+
+                    if self.verbose:
+                        print("Creating channel handler for {} {}: {}".format(vcdu.SC, vcdu.VCID, vcdu.VC))
                 
                 # Pass VCDU to appropriate channel handler
                 self.channelHandlers[vcdu.VCID].data_in(vcdu)
@@ -129,5 +142,4 @@ class Channel:
         :param packet: Parsed VCDU object
         """
 
-        if self.verbose:
-            vcdu.print_info()
+        return None
