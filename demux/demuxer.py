@@ -64,13 +64,12 @@ class Demuxer:
                 # Check channel handler for current VCID exists
                 try:
                     self.channelHandlers[vcdu.VCID]
-
                 except KeyError:
                     # Create new channel handler instance
                     self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose)
 
                     if self.verbose:
-                        print("Creating channel handler for {} {}: {}".format(vcdu.SC, vcdu.VCID, vcdu.VC))
+                        print("CREATED NEW CHANNEL HANDLER")
                 
                 # Pass VCDU to appropriate channel handler
                 self.channelHandlers[vcdu.VCID].data_in(vcdu)
@@ -142,4 +141,8 @@ class Channel:
         :param packet: Parsed VCDU object
         """
 
-        return None
+        # Parse M_PDU
+        mpdu = CCSDS.M_PDU(vcdu.MPDU)
+
+        if self.verbose:
+            mpdu.print_info()

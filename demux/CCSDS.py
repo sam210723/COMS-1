@@ -89,8 +89,38 @@ class M_PDU:
     Parses CCSDS Multiplexing Protocol Data Unit (M_PDU)
     """
 
-    def __init__(self):
-        return
+    def __init__(self, data):
+        self.data = data
+        self.parse()
+    
+    def parse(self):
+        """
+        Parse M_PDU header fields
+        """
+
+        header = self.data[:2]
+
+        # Header fields
+        #self.SPARE = get_bits(header, 0, 5, 16)             # Spare Field (always b00000)
+        self.POINTER = get_bits_int(header, 5, 11, 16)      # First Pointer Header
+
+        # Detect if M_PDU contains CP_PDU header
+        if self.POINTER != 2047:  # 0x07FF
+            self.HEADER = True
+        else:
+            self.HEADER = False
+        
+        self.PACKET = self.data[2:]
+    
+    def print_info(self):
+        """
+        Prints information about the current M_PDU to the console
+        """
+
+        if self.HEADER:
+            print("    [M_PDU] HEADER: 0x{}".format(hex(self.POINTER)[2:].upper()))
+        else:
+            print("    [M_PDU]")
 
 
 class CP_PDU:
