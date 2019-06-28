@@ -7,6 +7,7 @@ Parsing and assembly functions for all CCSDS protocol layers
 
 from tools import get_bits, get_bits_int
 
+
 class VCDU:
     """
     Parses CCSDS Virtual Channel Data Unit (VCDU)
@@ -38,48 +39,41 @@ class VCDU:
         # M_PDU contained in VCDU
         self.MPDU = self.data[6:]
     
-    def get_SC(self, id):
+    def get_SC(self, scid):
         """
         Get name of spacecraft by ID
         """
 
-        if self.SCID == 195:
-            return "COMS-1"
-        else:
+        scname = {}
+        scname[195] = "COMS-1"
+
+        try:
+            return scname[scid]
+        except KeyError:
             return None
     
     def get_VC(self, vcid):
         """
         Get name of Virtual Channel by ID
         """
+        vcname = {}
+        vcname[0] = "VIS"
+        vcname[1] = "SWIR"
+        vcname[2] = "WV"
+        vcname[3] = "IR1"
+        vcname[4] = "IR2"
+        vcname[5] = "ANT"
+        vcname[6] = "ENC"
+        vcname[7] = "CMDPS"
+        vcname[8] = "NWP"
+        vcname[9] = "GOCI"
+        vcname[10] = "BINARY"
+        vcname[11] = "TYPHOON"
+        vcname[63] = "FILL"
 
-        if self.VCID == 0:
-            return "VIS"
-        elif self.VCID == 1:
-            return "SWIR"
-        elif self.VCID == 2:
-            return "WV"
-        elif self.VCID == 3:
-            return "IR1"
-        elif self.VCID == 4:
-            return "IR2"
-        elif self.VCID == 5:
-            return "ANT"
-        elif self.VCID == 6:
-            return "ENC"
-        elif self.VCID == 7:
-            return "CMDPS"
-        elif self.VCID == 8:
-            return "NWP"
-        elif self.VCID == 9:
-            return "GOCI"
-        elif self.VCID == 10:
-            return "BINARY"
-        elif self.VCID == 11:
-            return "TYPHOON"
-        elif self.VCID == 63:
-            return "FILL"
-        else:
+        try:
+            return vcname[vcid]
+        except KeyError:
             return None
 
     def print_info(self):
