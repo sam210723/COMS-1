@@ -133,6 +133,7 @@ class Channel:
 
         self.VCID = vcid
         self.verbose = v
+        self.counter = -1
     
 
     def data_in(self, vcdu):
@@ -140,6 +141,15 @@ class Channel:
         Takes in VCDUs for the channel handler to process
         :param packet: Parsed VCDU object
         """
+
+        # Check VCDU continuity
+        if self.counter != -1:
+            diff = vcdu.COUNTER - self.counter
+            if diff != 1:
+                print("  DROPPED {} FRAMES    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
+        
+        self.counter = vcdu.COUNTER
+
 
         # Parse M_PDU
         mpdu = CCSDS.M_PDU(vcdu.MPDU)
