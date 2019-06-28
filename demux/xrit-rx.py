@@ -1,8 +1,8 @@
 """
-xrit-demux.py
+xrit-rx.py
 https://github.com/sam210723/COMS-1
 
-Frontend for CCSDS demultiplexer
+Frontend for CCSDS demultiplexer and image generator
 """
 
 from argparse import ArgumentParser
@@ -11,6 +11,7 @@ from demuxer import Demuxer
 from os import mkdir, path
 import socket
 from time import time
+
 
 # Globals
 args = None             # Parsed CLI arguments
@@ -23,10 +24,12 @@ packetf = None          # Packet file object
 sck = None              # TCP socket object
 buflen = 892            # Input buffer length (1 VCDU)
 demux = None            # Demuxer class object
+ver = 0.1               # XRIT-RX xrit-rx version
+
 
 def init():
     print("┌───────────────────────────────────┐")
-    print("│        COMS-1 xRIT Demuxer        │")
+    print("│          COMS-1 xRIT RX           │")
     print("│    github.com/sam210723/COMS-1    │")
     print("└───────────────────────────────────┘\n")
     
@@ -208,7 +211,7 @@ def parse_args():
     
     argp = ArgumentParser()
     argp.description = "Frontend for CCSDS demultiplexer"
-    argp.add_argument("--config", action="store", help="Configuration file path (.ini)", default="xrit-demux.ini")
+    argp.add_argument("--config", action="store", help="Configuration file path (.ini)", default="xrit-rx.ini")
     argp.add_argument("--file", action="store", help="Path to VCDU packet file", default=None)
     argp.add_argument("-v", action="store_true", help="Enable verbose console output (only useful for debugging)", default=False)
 
@@ -228,12 +231,12 @@ def parse_config(path):
     cfgp.read(path)
 
     if args.file == None:
-        source = cfgp.get('demuxer', 'input').upper()
+        source = cfgp.get('rx', 'input').upper()
     else:
         source = "FILE"
     
-    downlink = cfgp.get('demuxer', 'mode').upper()
-    output = cfgp.get('demuxer', 'output')
+    downlink = cfgp.get('rx', 'mode').upper()
+    output = cfgp.get('rx', 'output')
 
     return cfgp
 
@@ -267,7 +270,9 @@ def print_config():
     
     absp = path.abspath(output)
     absp = absp[0].upper() + absp[1:]  # Fix lowercase drive letter
-    print("OUTPUT PATH:      {}\n".format(absp))
+    print("OUTPUT PATH:      {}".format(absp))
+    
+    print("VERSION:          v{}\n".format(ver))
 
 
 try:
