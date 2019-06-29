@@ -60,6 +60,11 @@ class Demuxer:
                 # Parse VCDU
                 vcdu = CCSDS.VCDU(packet)
 
+                # Check spacecraft is supported
+                if vcdu.SC != "COMS-1":
+                    if self.verbose: print("SPACECRAFT \"{}\" NOT SUPPORTED".format(vcdu.SCID))
+                    continue
+
                 # Check for VCID change
                 if lastVCID == None:                # First VCDU (demuxer just started)
                     if self.verbose: print()
@@ -276,4 +281,4 @@ class Channel:
                 diff = ac - ex
 
                 if self.verbose: print("    LENGTH:     ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
-                print("SKIPPING FILE (DROPPED PACKETS?)")
+                print("  SKIPPING FILE (DROPPED PACKETS?)")

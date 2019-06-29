@@ -306,7 +306,7 @@ class TP_File:
         
         countType = " ({}, SEGMENT: {})".format(band, num)
 
-        print("\n  [TP_File] COUNTER: {}{}   LENGTH: {}".format(self.COUNTER, countType, self.LENGTH))
+        print("  [TP_File] COUNTER: {}{}   LENGTH: {}".format(self.COUNTER, countType, self.LENGTH))
 
 
 class S_PDU:
