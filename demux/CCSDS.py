@@ -1,5 +1,5 @@
 """
-CCSDS.py
+ccsds.py
 https://github.com/sam210723/COMS-1
 
 Parsing and assembly functions for all CCSDS protocol layers

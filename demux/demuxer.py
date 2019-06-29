@@ -3,7 +3,7 @@ demuxer.py
 https://github.com/sam210723/COMS-1
 """
 
-import CCSDS
+import ccsds as CCSDS
 from collections import deque
 from time import sleep
 from threading import Thread
@@ -157,6 +157,7 @@ class Channel:
         self.counter = -1           # Last VCDU packet counter
         self.DROPPED = 0            # Dropped packet count
         self.cCPPDU = None          # Current CP_PDU object
+        self.cTPFile = None         # Current TP_File object
 
 
     def data_in(self, vcdu):
@@ -176,13 +177,13 @@ class Channel:
             # If data preceeds header
             if mpdu.POINTER != 0:
                 # Finish previous CP_PDU
-                prev = mpdu.PACKET[:mpdu.POINTER]
-                lenok, crcok = self.cCPPDU.finish(prev, self.crclut)
+                preptr = mpdu.PACKET[:mpdu.POINTER]
+                lenok, crcok = self.cCPPDU.finish(preptr, self.crclut)
                 self.CP_PDU_Check(lenok, crcok)
                 
                 # Create new CP_PDU
-                next = mpdu.PACKET[mpdu.POINTER:]
-                self.cCPPDU = CCSDS.CP_PDU(next)
+                postptr = mpdu.PACKET[mpdu.POINTER:]
+                self.cCPPDU = CCSDS.CP_PDU(postptr)
 
             else:
                 # First CP_PDU in TP_File
