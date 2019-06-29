@@ -260,7 +260,7 @@ def print_config():
     if source == "OSP":
         s = "Open Satellite Project (github.com/opensatelliteproject/xritdemod)"
     elif source == "GOESRECV":
-        s = "goesrecv (github.com/pietern/goestools)"
+        s = "goesrecv (github.com/sam210723/goestools)"
     elif source == "FILE":
         s = "File ({})".format(args.file)
     else:
