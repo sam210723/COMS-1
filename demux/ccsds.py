@@ -81,7 +81,7 @@ class VCDU:
         Prints information about the current VCDU to the console
         """
 
-        print("\n\n[VCID] {} {}: {}".format(self.SC, self.VCID, self.VC))
+        print("\n[VCID] {} {}: {}".format(self.SC, self.VCID, self.VC))
 
 
 class M_PDU:
@@ -183,7 +183,7 @@ class CP_PDU:
             crcok = False
         else:
             crcok = True
-        
+
         return lenok, crcok
     
     def is_EOF(self):
@@ -236,8 +236,77 @@ class TP_File:
     Parses and assembles CCSDS Transport Files (TP_File)
     """
 
-    def __init__(self):
-        return
+    def __init__(self, data):
+        self.data = data
+        self.PAYLOAD = None
+        self.parse()
+    
+    def parse(self):
+        """
+        Parse TP_File header fields
+        """
+
+        header = self.data[:10]
+
+        # Header fields
+        self.COUNTER = get_bits_int(header, 0, 16, 80)                # File Counter
+        self.LENGTH = int(get_bits_int(header, 16, 64, 80)/8)         # File Length
+
+        # Add post-header data to payload
+        self.PAYLOAD = self.data[10:]
+    
+    def append(self, data):
+        """
+        Append data to TP_File payload
+        """
+
+        self.PAYLOAD += data
+
+    def finish(self, data):
+        """
+        Finish CP_PDU by checking length
+        """
+
+        # Append last chunk of data
+        self.append(data)
+
+        # Check payload length against expected length
+        plen = len(self.PAYLOAD)
+        if plen != self.LENGTH:
+            lenok = False
+        else:
+            lenok = True
+        
+        return lenok
+    
+    def print_info(self):
+        """
+        Prints information about the current TP_File to the console
+        """
+
+        # Get image band based on file counter
+        if 1 <= self.COUNTER <= 10:
+            band = "VIS"
+            num = self.COUNTER
+        elif 11 <= self.COUNTER <= 20:
+            band = "SWIR"
+            num = self.COUNTER - 10
+        elif 21 <= self.COUNTER <= 30:
+            band = "WV"
+            num = self.COUNTER - 20
+        elif 31 <= self.COUNTER <= 40:
+            band = "IR1"
+            num = self.COUNTER - 30
+        elif 41 <= self.COUNTER <= 50:
+            band = "IR2"
+            num = self.COUNTER - 40
+        else:
+            band = "Other"
+            num = "?"
+        
+        countType = " ({}, SEGMENT: {})".format(band, num)
+
+        print("\n  [TP_File] COUNTER: {}{}   LENGTH: {}".format(self.COUNTER, countType, self.LENGTH))
 
 
 class S_PDU:

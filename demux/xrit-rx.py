@@ -272,7 +272,7 @@ def print_config():
     absp = absp[0].upper() + absp[1:]  # Fix lowercase drive letter
     print("OUTPUT PATH:      {}".format(absp))
     
-    print("VERSION:          v{}\n".format(ver))
+    print("VERSION:          {}\n".format(ver))
 
 
 try:

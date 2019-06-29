@@ -62,9 +62,9 @@ class Demuxer:
 
                 # Check for VCID change
                 if lastVCID == None:                # First VCDU (demuxer just started)
-                    if self.verbose:
-                        vcdu.print_info()
-                        print("WAITING FOR VCID TO CHANGE")
+                    if self.verbose: print()
+                    vcdu.print_info()
+                    print("  WAITING FOR VCID TO CHANGE\n")
                     lastVCID = vcdu.VCID
                     continue
                 elif lastVCID == vcdu.VCID:         # VCID has not changed
@@ -73,7 +73,8 @@ class Demuxer:
                     else:
                         pass
                 elif lastVCID != vcdu.VCID:         # VCID has changed
-                    if self.verbose: vcdu.print_info()
+                    if self.verbose: print()
+                    vcdu.print_info()
                     seenVCIDChange = True
                     lastVCID = vcdu.VCID
                 
@@ -167,7 +168,7 @@ class Channel:
         """
 
         # Check VCDU continuity
-        self.VCDU_Continuity(vcdu)
+        self.VCDU_continuity(vcdu)
 
         # Parse M_PDU
         mpdu = CCSDS.M_PDU(vcdu.MPDU)
@@ -179,7 +180,12 @@ class Channel:
                 # Finish previous CP_PDU
                 preptr = mpdu.PACKET[:mpdu.POINTER]
                 lenok, crcok = self.cCPPDU.finish(preptr, self.crclut)
-                self.CP_PDU_Check(lenok, crcok)
+                if self.verbose: self.check_CPPDU(lenok, crcok)
+
+                # Handle finished CP_PDU
+                self.handle_CPPDU(self.cCPPDU)
+
+                #TODO: Check CP_PDU continuity
                 
                 # Create new CP_PDU
                 postptr = mpdu.PACKET[mpdu.POINTER:]
@@ -202,7 +208,7 @@ class Channel:
             self.cCPPDU.append(mpdu.PACKET)
     
 
-    def VCDU_Continuity(self, vcdu):
+    def VCDU_continuity(self, vcdu):
         """
         Checks VCDU packet continuity by comparing packet counters
         """
@@ -219,7 +225,7 @@ class Channel:
         self.counter = vcdu.COUNTER
 
     
-    def CP_PDU_Check(self, lenok, crcok):
+    def check_CPPDU(self, lenok, crcok):
         """
         Checks length and CRC of finished CP_PDU
         """
@@ -239,3 +245,35 @@ class Channel:
         else:
             print("    CRC:        ERROR")
         print()
+
+
+    def handle_CPPDU(self, cppdu):
+        """
+        Processes complete CP_PDUs to build a TP_File
+        """
+
+        if cppdu.SEQ == "FIRST":
+            # Create new TP_File
+            self.cTPFile = CCSDS.TP_File(cppdu.PAYLOAD[:-2])
+
+        elif cppdu.SEQ == "CONTINUE":
+            # Add data to TP_File
+            self.cTPFile.append(cppdu.PAYLOAD[:-2])
+
+        elif cppdu.SEQ == "LAST":
+            # Close current TP_File
+            lenok = self.cTPFile.finish(cppdu.PAYLOAD[:-2])
+
+            if self.verbose: self.cTPFile.print_info()
+            if lenok:
+                if self.verbose: print("    LENGTH:     OK")
+                
+                #TODO: Process S_PDU
+
+            elif not lenok:
+                ex = self.cTPFile.LENGTH
+                ac = len(self.cTPFile.PAYLOAD)
+                diff = ac - ex
+
+                if self.verbose: print("    LENGTH:     ERROR (EXPECTED: {}, ACTUAL: {}, DIFF: {})".format(ex, ac, diff))
+                print("SKIPPING FILE (DROPPED PACKETS?)")
