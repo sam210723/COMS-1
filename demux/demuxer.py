@@ -66,6 +66,10 @@ class Demuxer:
                 # Parse VCDU
                 vcdu = CCSDS.VCDU(packet)
 
+                # Dump raw VCDU to file
+                if dumpFile != None and vcdu.VCID != 63:
+                    dumpFile.write(packet)
+
                 # Check spacecraft is supported
                 if vcdu.SC != "COMS-1":
                     if self.verbose: print("SPACECRAFT \"{}\" NOT SUPPORTED".format(vcdu.SCID))
@@ -92,10 +96,6 @@ class Demuxer:
                 # Discard fill packets
                 if vcdu.VCID == 63:
                     continue
-                
-                # Dump raw VCDU to file
-                if dumpFile != None:
-                    dumpFile.write(packet)
                 
                 # Check channel handler for current VCID exists
                 try:
