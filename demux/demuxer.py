@@ -161,7 +161,6 @@ class Channel:
         self.crclut = crclut        # CP_PDU CRC LUT
         self.verbose = v            # Verbose output flag
         self.counter = -1           # Last VCDU packet counter
-        self.DROPPED = 0            # Dropped packet count
         self.cCPPDU = None          # Current CP_PDU object
         self.cTPFile = None         # Current TP_File object
 
@@ -227,7 +226,7 @@ class Channel:
             
             if diff != 0:
                 self.DROPPED += diff
-                print("  DROPPED {} PACKETS  (TOTAL: {})".format(diff, self.DROPPED))
+                print("  DROPPED {} PACKETS".format(diff))
                 #print("  DROPPED {} PACKETS    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
         
         self.counter = vcdu.COUNTER
