@@ -18,7 +18,7 @@
         {
             "label": "Compile desdec",
             "type": "shell",
-            "command": "gcc decrypt/desdec.c -o decrypt/desdec.exe",
+            "command": "gcc decrypt/c/desdec.c -o decrypt/c/desdec.exe",
             "problemMatcher": []
         },
         {
