@@ -16,6 +16,12 @@
             "problemMatcher": []
         },
         {
+            "label": "Compile and run xrit-decrypt",
+            "type": "shell",
+            "command": "gcc decrypt/desdec.c -o decrypt/desdec.exe && .\\decrypt\\desdec.exe",
+            "problemMatcher": []
+        },
+        {
             "label": "UDP Bridge",
             "type": "shell",
             "command": "python udp-bridge/udp-bridge.py 4999 5000",
