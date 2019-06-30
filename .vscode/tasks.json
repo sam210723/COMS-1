@@ -4,21 +4,21 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "xRIT Demux (config)",
+            "label": "xRIT RX (config)",
             "type": "shell",
-            "command": "python demux/xrit-demux.py -v --config demux/xrit-demux.ini",
+            "command": "python demux/xrit-rx.py -v --config demux/xrit-rx.ini",
             "problemMatcher": []
         },
         {
-            "label": "xRIT Demux (file)",
+            "label": "xRIT RX (file)",
             "type": "shell",
-            "command": "python demux/xrit-demux.py -v --config demux/xrit-demux.ini --file samples/vcdu.bin",
+            "command": "python demux/xrit-rx.py -v --config demux/xrit-rx.ini --file samples/vcdu.bin",
             "problemMatcher": []
         },
         {
-            "label": "Compile and run xrit-decrypt",
+            "label": "Compile desdec",
             "type": "shell",
-            "command": "gcc decrypt/desdec.c -o decrypt/desdec.exe && .\\decrypt\\desdec.exe",
+            "command": "gcc decrypt/desdec.c -o decrypt/desdec.exe",
             "problemMatcher": []
         },
         {

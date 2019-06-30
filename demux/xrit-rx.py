@@ -48,7 +48,7 @@ def init():
     config_input()
 
     # Create demuxer instance
-    demux = Demuxer(downlink, args.v)
+    demux = Demuxer(downlink, args.v, args.dump)
 
     # Check demuxer thread is ready
     if not demux.coreReady:
@@ -214,6 +214,7 @@ def parse_args():
     argp.add_argument("--config", action="store", help="Configuration file path (.ini)", default="xrit-rx.ini")
     argp.add_argument("--file", action="store", help="Path to VCDU packet file", default=None)
     argp.add_argument("-v", action="store_true", help="Enable verbose console output (only useful for debugging)", default=False)
+    argp.add_argument("--dump", action="store", help="Dump VCDUs (except fill) to file (only useful for debugging)", default=None)
 
     return argp.parse_args()
 

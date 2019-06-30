@@ -14,7 +14,7 @@ class Demuxer:
     Coordinates demultiplexing of CCSDS virtual channels into xRIT files.
     """
 
-    def __init__(self, downlink, v):
+    def __init__(self, downlink, v, d):
         """
         Initialises demuxer class
         """
@@ -24,6 +24,7 @@ class Demuxer:
         self.coreReady = False          # Core thread ready state
         self.coreStop = False           # Core thread stop flag
         self.verbose = v                # Verbose output flag
+        self.dumpPath = d               # VCDU dump file path
         self.channelHandlers = {}       # List of channel handlers
 
         if downlink == "LRIT":
@@ -49,6 +50,11 @@ class Demuxer:
         lastVCID = None             # Last VCID seen
         seenVCIDChange = False      # Seen changed in VCID flag
         crclut = CCITT_LUT()        # CP_PDU CRC LUT
+
+        # Open VCDU dump file
+        dumpFile = None
+        if self.dumpPath != None:
+            dumpFile = open(self.dumpPath, 'wb+')
 
         # Thread loop
         while not self.coreStop:
@@ -87,6 +93,10 @@ class Demuxer:
                 if vcdu.VCID == 63:
                     continue
                 
+                # Dump raw VCDU to file
+                if dumpFile != None:
+                    dumpFile.write(packet)
+                
                 # Check channel handler for current VCID exists
                 try:
                     self.channelHandlers[vcdu.VCID]
@@ -104,6 +114,9 @@ class Demuxer:
         
         # Gracefully exit core thread
         if self.coreStop:
+            if dumpFile != None:
+                dumpFile.close()
+            
             return
 
     def push(self, packet):
@@ -200,6 +213,8 @@ class Channel:
                 # Create new CP_PDU
                 self.cCPPDU = CCSDS.CP_PDU(mpdu.PACKET)
             
+            #TODO: Finish SEQ LAST CP_PDU before going to FILL
+
             # Handle special EOF CP_PDU
             if self.cCPPDU.is_EOF():
                 self.cCPPDU = None
@@ -219,13 +234,14 @@ class Channel:
         """
         Checks VCDU packet continuity by comparing packet counters
         """
-        
+        #TODO: Check counter globally?
+        #TODO: Case for counter restart
+
         # If at least one VCDU has been received
         if self.counter != -1:
             diff = vcdu.COUNTER - self.counter - 1
             
             if diff != 0:
-                self.DROPPED += diff
                 print("  DROPPED {} PACKETS".format(diff))
                 #print("  DROPPED {} PACKETS    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
         

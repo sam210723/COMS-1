@@ -110,3 +110,4 @@ ENV/
 desktop.ini
 ingest/*
 decrypt/xrit-decrypt.exe
+.vscode/ipch
