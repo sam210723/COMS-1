@@ -210,7 +210,10 @@ class Channel:
                     print("    HEADER:     0x{}".format(hex(mpdu.POINTER)[2:].upper()))
         else:
             # Append packet to current CP_PDU
-            self.cCPPDU.append(mpdu.PACKET)
+            try:
+                self.cCPPDU.append(mpdu.PACKET)
+            except AttributeError:
+                if self.verbose: print("NO CP_PDU TO APPEND M_PDU TO")
     
 
     def VCDU_continuity(self, vcdu):
