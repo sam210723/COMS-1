@@ -14,7 +14,7 @@ class Demuxer:
     Coordinates demultiplexing of CCSDS virtual channels into xRIT files.
     """
 
-    def __init__(self, downlink, v, d):
+    def __init__(self, downlink, v, d, output):
         """
         Initialises demuxer class
         """
@@ -25,6 +25,7 @@ class Demuxer:
         self.coreStop = False           # Core thread stop flag
         self.verbose = v                # Verbose output flag
         self.dumpPath = d               # VCDU dump file path
+        self.outputPath = output        # xRIT file output path root
         self.channelHandlers = {}       # List of channel handlers
 
         if downlink == "LRIT":
@@ -102,7 +103,7 @@ class Demuxer:
                     self.channelHandlers[vcdu.VCID]
                 except KeyError:
                     # Create new channel handler instance
-                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose, crclut)
+                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose, crclut, self.outputPath)
                     if self.verbose: print("  CREATED NEW CHANNEL HANDLER\n")
 
                 # Pass VCDU to appropriate channel handler
@@ -162,7 +163,7 @@ class Channel:
     Virtual channel data handler
     """
 
-    def __init__(self, vcid, v, crclut):
+    def __init__(self, vcid, v, crclut, output):
         """
         Initialises virtual channel data handler
         :param vcid: Virtual Channel ID
@@ -171,8 +172,9 @@ class Channel:
         """
 
         self.VCID = vcid            # VCID for this handler
-        self.crclut = crclut        # CP_PDU CRC LUT
         self.verbose = v            # Verbose output flag
+        self.crclut = crclut        # CP_PDU CRC LUT
+        self.outputPath = output    # xRIT file output path root
         self.counter = -1           # Last VCDU packet counter
         self.cCPPDU = None          # Current CP_PDU object
         self.cTPFile = None         # Current TP_File object
@@ -291,7 +293,13 @@ class Channel:
             if lenok:
                 if self.verbose: print("    LENGTH:     OK")
                 
-                #TODO: Process S_PDU
+                # Handle S_PDU (decryption)
+                spdu = CCSDS.S_PDU(self.cTPFile.PAYLOAD)
+
+                # Create new xRIT file
+                xrit = CCSDS.xRIT(spdu.data)
+                xrit.save(self.outputPath)
+                xrit.print_info()
 
             elif not lenok:
                 ex = self.cTPFile.LENGTH

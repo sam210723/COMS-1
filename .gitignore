@@ -108,6 +108,6 @@ ENV/
 
 *.db
 desktop.ini
-ingest/*
+demux/ingest/*
 .vscode/ipch
 *.exe

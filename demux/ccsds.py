@@ -314,8 +314,8 @@ class S_PDU:
     Parses CCSDS Session Protocol Data Unit (S_PDU)
     """
 
-    def __init__(self):
-        return
+    def __init__(self, data):
+        self.data = data
 
 
 class xRIT:
@@ -323,5 +323,78 @@ class xRIT:
     Parses and assembles CCSDS xRIT Files (xRIT_Data)
     """
 
-    def __init__(self):
-        return
+    def __init__(self, data):
+        self.data = data
+        self.parse()
+    
+    def parse(self):
+        """
+        Parse xRIT headers
+        """
+
+        primaryHeader = self.data[:16]
+
+        # Header fields
+        self.HEADER_TYPE = get_bits_int(primaryHeader, 0, 8, 128)               # File Counter (always 0x00)
+        self.HEADER_LEN = get_bits_int(primaryHeader, 8, 16, 128)               # Header Length (always 0x10)
+        self.FILE_TYPE = get_bits_int(primaryHeader, 24, 8, 128)                # File Type
+        self.TOTAL_HEADER_LEN = get_bits_int(primaryHeader, 32, 32, 128)        # Total xRIT Header Length
+        self.DATA_LEN = get_bits_int(primaryHeader, 64, 64, 128)                # Data Field Length
+
+        if self.FILE_TYPE == 0:
+            self.FILE_TYPE = "Image Data"
+        elif self.FILE_TYPE == 1:
+            self.FILE_TYPE = "GTS Message"
+        elif self.FILE_TYPE == 2:
+            self.FILE_TYPE = "Alphanumeric Text"
+        elif self.FILE_TYPE == 3:
+            self.FILE_TYPE = "Encryption Key Message"
+        elif self.FILE_TYPE == 128:
+            self.FILE_TYPE = "CMDPS Analysis Data"
+        elif self.FILE_TYPE == 129:
+            self.FILE_TYPE = "NWP Data"
+        elif self.FILE_TYPE == 130:
+            self.FILE_TYPE = "GOCI Data"
+        elif self.FILE_TYPE == 131:
+            self.FILE_TYPE = "Typhoon Info"
+
+        # Loop through headers until Annotation Text header (type 4)
+        offset = self.HEADER_LEN
+        nextHeader = self.get_next_header(offset)
+
+        while nextHeader != 4:
+            offset += self.get_header_len(offset)
+            nextHeader = self.get_next_header(offset)
+        
+        # Parse Annotation Text header (type 4)
+        athLen = self.get_header_len(offset)
+        self.FILE_NAME = self.data[offset + 3 : offset + athLen].decode('utf-8')
+    
+    def get_next_header(self, offset):
+        """
+        Returns type of next header
+        """
+        return int.from_bytes(self.data[offset : offset + 1], byteorder='big')
+    
+    def get_header_len(self, offset):
+        """
+        Returns length of current header
+        """
+        return int.from_bytes(self.data[offset + 1 : offset + 3], byteorder='big')
+
+    def save(self, path):
+        """
+        Saves xRIT file to disk
+        """
+
+        # Save file to disk
+        outFile = open(path + "/" + self.FILE_NAME, mode="wb")
+        outFile.write(self.data)
+        outFile.close()
+
+    def print_info(self):
+        """
+        Prints information about the current xRIT file to the console
+        """
+
+        print("  [NEW FILE] {}".format(self.FILE_NAME))

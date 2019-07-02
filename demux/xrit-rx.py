@@ -48,7 +48,7 @@ def init():
     config_input()
 
     # Create demuxer instance
-    demux = Demuxer(downlink, args.v, args.dump)
+    demux = Demuxer(downlink, args.v, args.dump, path.abspath(output))
 
     # Check demuxer thread is ready
     if not demux.coreReady:
