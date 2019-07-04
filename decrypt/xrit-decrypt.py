@@ -11,15 +11,19 @@ import os
 import pyDes
 
 argparser = argparse.ArgumentParser(description="Decrypts xRIT file into a plain-text xRIT file using single layer DES")
-argparser.add_argument("KEY", action="store", help="Decryption key")
+argparser.add_argument("KEYS", action="store", help="Decrypted key file")
 argparser.add_argument("XRIT", action="store", help="xRIT file (or folder) to decrypt")
 args = argparser.parse_args()
 
 xritFile = None
 xritBytes = None
 files = []
+keys = {}
 
 def init():
+    # Load key file
+    load_keys(args.KEYS)
+
     # If input is a directory
     if os.path.isdir(args.XRIT):
         # Loop through all .lrit/.hrit files in directory
@@ -61,6 +65,36 @@ def init():
         load_xrit(args.XRIT)
 
 
+def load_keys(kpath):
+    """
+    Load and parse key file
+    """
+    
+    print("Loading decryption keys...")
+
+    p = os.path.abspath(kpath)
+    f = open(p, 'rb')
+    fbytes = f.read()
+
+    # Parse key count
+    count = int.from_bytes(fbytes[:2], byteorder='big')
+
+    # Parse keys
+    for i in range(count):
+        offset = (i * 10) + 2
+        index = fbytes[offset : offset + 2]
+        key = fbytes[offset + 2 : offset + 10]
+
+        '''
+        i = hex(int.from_bytes(index, byteorder='big')).upper()[2:]
+        k = hex(int.from_bytes(key, byteorder='big')).upper()[2:]
+        print("{}: {}".format(i, k))
+        '''
+
+        # Add key to dictionary
+        keys[index] = key
+
+
 def load_xrit(fpath):
     """
     Loads xRIT file from disk
@@ -72,15 +106,15 @@ def load_xrit(fpath):
     xritBytes = xritFile.read()
     xritFile.close()
 
-    parse_primary(xritBytes, fpath)
+    parse_primary_header(xritBytes, fpath)
 
 
-def parse_primary(data, fpath):
+def parse_primary_header(data, fpath):
     """
     Parses xRIT primary header to get field lengths
     """
 
-    print("Parsing primary xRIT header...")
+    print("Parsing xRIT primary header...")
 
     primaryHeader = data[:16]
 
@@ -104,14 +138,39 @@ def parse_primary(data, fpath):
             dataField += b'x00'
         print("\nAdded {} null bytes to fill last DES block\n".format(dFMod8))
 
-    decrypt(headerField, dataField, fpath)
+    parse_key_header(headerField, dataField, fpath)
 
 
-def decrypt(headers, data, fpath):
+def parse_key_header(headerField, dataField, fpath):
+    """
+    Parses xRIT key header to get key index
+    """
+
+    print("Parsing xRIT key header...")
+
+    # Loop through headers until Key header (type 7)
+    offset = 0
+    nextHeader = int.from_bytes(headerField[offset : offset + 1], byteorder='big')
+
+    while nextHeader != 7:
+        offset += int.from_bytes(headerField[offset + 1 : offset + 3], byteorder='big')
+        nextHeader = int.from_bytes(headerField[offset : offset + 1], byteorder='big')
+        
+    # Parse Key header (type 7)
+    keyHLen = int.from_bytes(headerField[offset + 1 : offset + 3], byteorder='big')
+    index = headerField[offset + 5 : offset + keyHLen]
+    indexStr = hex(int.from_bytes(index, byteorder='big')).upper()[2:]
+    key = keys[index]
+
+    print("  Key Index: {}".format(indexStr))
+
+    decrypt(headerField, dataField, fpath, key)
+
+
+def decrypt(headers, data, fpath, key):
     print("Decrypting...")
 
-    keyBytes = bytes.fromhex(args.KEY)
-    desObj = pyDes.des(keyBytes, mode=pyDes.ECB)
+    desObj = pyDes.des(key, mode=pyDes.ECB)
     decData = desObj.decrypt(data, padmode=pyDes.PAD_NORMAL)
     
     decFile = open(fpath + ".dec", 'wb')
