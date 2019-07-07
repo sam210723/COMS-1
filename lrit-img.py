@@ -32,6 +32,7 @@ def init():
         # Loop through files with .lrit.dec extension in input folder
         for f in glob.glob(args.INPUT + "/*.lrit.dec"):
             files.append(f)
+        files.sort()
         
         if files.__len__() <= 0:
             print("No LRIT files found")
