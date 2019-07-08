@@ -198,11 +198,15 @@ class Channel:
             if mpdu.POINTER != 0:
                 # Finish previous CP_PDU
                 preptr = mpdu.PACKET[:mpdu.POINTER]
-                lenok, crcok = self.cCPPDU.finish(preptr, self.crclut)
-                if self.verbose: self.check_CPPDU(lenok, crcok)
 
-                # Handle finished CP_PDU
-                self.handle_CPPDU(self.cCPPDU)
+                try:
+                    lenok, crcok = self.cCPPDU.finish(preptr, self.crclut)
+                    if self.verbose: self.check_CPPDU(lenok, crcok)
+
+                    # Handle finished CP_PDU
+                    self.handle_CPPDU(self.cCPPDU)
+                except AttributeError:
+                    if self.verbose: print("  NO CP_PDU TO FINISH (DROPPED PACKETS?)")
 
                 #TODO: Check CP_PDU continuity
                 
@@ -229,7 +233,7 @@ class Channel:
             try:
                 self.cCPPDU.append(mpdu.PACKET)
             except AttributeError:
-                if self.verbose: print("NO CP_PDU TO APPEND M_PDU TO")
+                if self.verbose: print("NO CP_PDU TO APPEND M_PDU TO (DROPPED PACKETS?)")
     
 
     def VCDU_continuity(self, vcdu):
