@@ -6,6 +6,7 @@ Parsing and assembly functions for all CCSDS protocol layers
 """
 
 from tools import get_bits, get_bits_int
+import os
 
 
 class VCDU:
@@ -381,14 +382,50 @@ class xRIT:
         Returns length of current header
         """
         return int.from_bytes(self.data[offset + 1 : offset + 3], byteorder='big')
+    
+    def get_save_path(self, root):
+        """
+        Parses xRIT file name
+        """
 
-    def save(self, path):
+        # Split file name into components
+        fnameSplit = self.FILE_NAME.split("_")
+
+        fType = fnameSplit[0]
+
+        if fType == "IMG":
+            obMode = fnameSplit[1]
+            seqNum = fnameSplit[2]
+            specCh = fnameSplit[3]
+            txDate = fnameSplit[4]
+            txTime = fnameSplit[5]
+            segNum = fnameSplit[6][:2]
+            fExt = self.FILE_NAME.split(".")[1]
+        elif fType == "ADD":
+            obMode = fnameSplit[1]
+            seqNum = fnameSplit[2]
+            txDate = fnameSplit[3]
+            txTime = fnameSplit[4]
+            segNum = fnameSplit[5][:2]
+            fExt = self.FILE_NAME.split(".")[1]
+        
+        path = "/{}/{}/".format(txDate, obMode)
+
+        # Create output directory
+        if not os.path.isdir(root + path):
+            os.mkdir(root + "/" + txDate)
+            os.mkdir(root + "/" + txDate + "/" + obMode)
+
+        return root + path + self.FILE_NAME
+
+    def save(self, root):
         """
         Saves xRIT file to disk
         """
 
         # Save file to disk
-        outFile = open(path + "/" + self.FILE_NAME, mode="wb")
+        outPath = self.get_save_path(root)
+        outFile = open(outPath, mode="wb")
         outFile.write(self.data)
         outFile.close()
 
