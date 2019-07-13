@@ -230,15 +230,20 @@ class Channel:
         Checks VCDU packet continuity by comparing packet counters
         """
         #TODO: Check counter globally?
-        #TODO: Case for counter restart
 
         # If at least one VCDU has been received
         if self.counter != -1:
-            diff = vcdu.COUNTER - self.counter - 1
+            # Check counter reset
+            if self.counter == 16777215 and vcdu.COUNTER == 0:
+                self.counter = vcdu.COUNTER
+                return
             
+            diff = vcdu.COUNTER - self.counter - 1
             if diff != 0:
-                print("  DROPPED {} PACKETS".format(diff))
-                #print("  DROPPED {} PACKETS    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
+                if self.verbose:
+                    print("  DROPPED {} PACKETS    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
+                else:
+                    print("  DROPPED {} PACKETS".format(diff))
         
         self.counter = vcdu.COUNTER
 
