@@ -408,14 +408,12 @@ class xRIT:
             txTime = fnameSplit[4]
             segNum = fnameSplit[5][:2]
             fExt = self.FILE_NAME.split(".")[1]
-        
-        path = "/{}/{}/".format(txDate, obMode)
 
-        # Create output directory
-        if not os.path.isdir(root + path):
-            os.mkdir(root + "/" + txDate)
-            os.mkdir(root + "/" + txDate + "/" + obMode)
+        # Check output directories exist
+        if not os.path.exists("{}\\{}".format(root, txDate)): os.mkdir(root + "\\" + txDate)
+        if not os.path.exists("{}\\{}\\{}".format(root, txDate, obMode)): os.mkdir(root + "\\" + txDate + "\\" + obMode)
 
+        path = "\\{}\\{}\\".format(txDate, obMode)
         return root + path + self.FILE_NAME
 
     def save(self, root):
