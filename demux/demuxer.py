@@ -77,23 +77,12 @@ class Demuxer:
                     continue
 
                 # Check for VCID change
-                if lastVCID == None:                # First VCDU (demuxer just started)
-                    if self.verbose: print()
-                    vcdu.print_info()
-                    print("  WAITING FOR VCID TO CHANGE\n")
-                    lastVCID = vcdu.VCID
-                    continue
-                elif lastVCID == vcdu.VCID:         # VCID has not changed
-                    if not seenVCIDChange:
-                        continue                    # Never seen VCID change, ignore data (avoids partial TP_Files)
-                    else:
-                        pass
-                elif lastVCID != vcdu.VCID:         # VCID has changed
+                if lastVCID != vcdu.VCID:
                     if self.verbose: print()
                     vcdu.print_info()
                     seenVCIDChange = True
                     lastVCID = vcdu.VCID
-                
+
                 # Discard fill packets
                 if vcdu.VCID == 63:
                     continue
@@ -233,7 +222,7 @@ class Channel:
             try:
                 self.cCPPDU.append(mpdu.PACKET)
             except AttributeError:
-                if self.verbose: print("NO CP_PDU TO APPEND M_PDU TO (DROPPED PACKETS?)")
+                if self.verbose: print("  NO CP_PDU TO APPEND M_PDU TO (DROPPED PACKETS?)")
     
 
     def VCDU_continuity(self, vcdu):
