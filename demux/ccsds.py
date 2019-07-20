@@ -338,7 +338,7 @@ class S_PDU:
     
     def parse(self):
         """
-        Parses xRIT primary key headers
+        Parses xRIT primary and key headers
         """
         
         primaryHeader = self.data[:16]
@@ -377,6 +377,10 @@ class S_PDU:
         self.key = self.keys[index]
 
     def decrypt(self):
+        """
+        Decrypts S_PDU data field into a plain text xRIT file
+        """
+
         decoder = DES.new(self.key, DES.MODE_ECB)
         decData = decoder.decrypt(self.dataField)
 
