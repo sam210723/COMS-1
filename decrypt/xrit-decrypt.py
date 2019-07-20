@@ -8,7 +8,8 @@ Decrypts xRIT file into a plain-text xRIT file using single layer DES
 import argparse
 import glob
 import os
-import pyDes
+#import pyDes
+from Crypto.Cipher import DES
 
 argparser = argparse.ArgumentParser(description="Decrypts xRIT file into a plain-text xRIT file using single layer DES")
 argparser.add_argument("KEYS", action="store", help="Decrypted key file")
@@ -170,8 +171,10 @@ def parse_key_header(headerField, dataField, fpath):
 def decrypt(headers, data, fpath, key):
     print("Decrypting...")
 
-    desObj = pyDes.des(key, mode=pyDes.ECB)
-    decData = desObj.decrypt(data, padmode=pyDes.PAD_NORMAL)
+    #desObj = pyDes.des(key, mode=pyDes.ECB)
+    #decData = desObj.decrypt(data, padmode=pyDes.PAD_NORMAL)
+    decoder = DES.new(key,DES.MODE_ECB)
+    decData = decoder.decrypt(data)
     
     decFile = open(fpath + ".dec", 'wb')
     decFile.write(headers)
