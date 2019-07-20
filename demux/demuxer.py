@@ -49,7 +49,6 @@ class Demuxer:
 
         # Thread globals
         lastVCID = None             # Last VCID seen
-        seenVCIDChange = False      # Seen changed in VCID flag
         crclut = CCITT_LUT()        # CP_PDU CRC LUT
 
         # Open VCDU dump file
@@ -80,7 +79,6 @@ class Demuxer:
                 if lastVCID != vcdu.VCID:
                     if self.verbose: print()
                     vcdu.print_info()
-                    seenVCIDChange = True
                     lastVCID = vcdu.VCID
 
                 # Discard fill packets
@@ -289,7 +287,7 @@ class Channel:
 
             if self.verbose: self.cTPFile.print_info()
             if lenok:
-                if self.verbose: print("    LENGTH:     OK")
+                if self.verbose: print("    LENGTH:     OK\n")
                 
                 # Handle S_PDU (decryption)
                 spdu = CCSDS.S_PDU(self.cTPFile.PAYLOAD)
