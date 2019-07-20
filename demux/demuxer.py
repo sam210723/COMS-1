@@ -14,7 +14,7 @@ class Demuxer:
     Coordinates demultiplexing of CCSDS virtual channels into xRIT files.
     """
 
-    def __init__(self, downlink, v, d, output):
+    def __init__(self, downlink, v, d, output, k):
         """
         Initialises demuxer class
         """
@@ -26,6 +26,7 @@ class Demuxer:
         self.verbose = v                # Verbose output flag
         self.dumpPath = d               # VCDU dump file path
         self.outputPath = output        # xRIT file output path root
+        self.keys = k                   # Decryption keys
         self.channelHandlers = {}       # List of channel handlers
 
         if downlink == "LRIT":

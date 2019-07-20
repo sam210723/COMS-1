@@ -21,6 +21,8 @@ source = None           # Input source type
 downlink = None         # Downlink type (LRIT/HRIT)
 output = None           # Data output path
 packetf = None          # Packet file object
+keypath = None          # Decryption key file path
+keys = {}               # Decryption keys
 sck = None              # TCP socket object
 buflen = 892            # Input buffer length (1 VCDU)
 demux = None            # Demuxer class object
@@ -37,6 +39,7 @@ def init():
     global config
     global stime
     global demux
+    global keys
 
     # Handle arguments and config file
     args = parse_args()
@@ -47,8 +50,11 @@ def init():
     dirs()
     config_input()
 
+    # Load decryption keys
+    load_keys()
+
     # Create demuxer instance
-    demux = Demuxer(downlink, args.v, args.dump, path.abspath(output))
+    demux = Demuxer(downlink, args.v, args.dump, path.abspath(output), keys)
 
     # Check demuxer thread is ready
     if not demux.coreReady:
@@ -196,12 +202,50 @@ def dirs():
     if not path.isdir(absp):
         try:
             mkdir(absp)
-            mkdir(absp + "/LRIT")
 
             print("Created output folder")
         except OSError as e:
             print("Error creating output folder\n{}\n\nExiting...".format(e))
             exit()
+
+
+def load_keys():
+    """
+    Loads key file and parses keys
+    """
+
+    global keypath
+    global keys
+
+    # Check key file exists
+    if not path.exists(keypath):
+        print("KEY FILE NOT FOUND (will output encrypted files)")
+        return
+
+    # Load key file
+    keyf = open(keypath, mode='rb')
+    fbytes = keyf.read()
+
+    # Parse key count
+    count = int.from_bytes(fbytes[:2], byteorder='big')
+
+    # Parse keys
+    for i in range(count):
+        offset = (i * 10) + 2
+        index = fbytes[offset : offset + 2]
+        key = fbytes[offset + 2 : offset + 10]
+
+        '''
+        # Print keys
+        i = hex(int.from_bytes(index, byteorder='big')).upper()[2:]
+        k = hex(int.from_bytes(key, byteorder='big')).upper()[2:]
+        print("{}: {}".format(i, k))
+        '''
+
+        # Add key to dictionary
+        keys[index] = key
+
+    print("Decryption keys loaded")
 
 
 def parse_args():
@@ -227,6 +271,7 @@ def parse_config(path):
     global source
     global downlink
     global output
+    global keypath
 
     cfgp = ConfigParser()
     cfgp.read(path)
@@ -238,6 +283,7 @@ def parse_config(path):
     
     downlink = cfgp.get('rx', 'mode').upper()
     output = cfgp.get('rx', 'output')
+    keypath = cfgp.get('rx', 'keys')
 
     return cfgp
 
@@ -249,6 +295,7 @@ def print_config():
 
     global downlink
     global output
+    global keypath
 
     print("SPACECRAFT:       COMS-1")
 
@@ -272,6 +319,7 @@ def print_config():
     absp = path.abspath(output)
     absp = absp[0].upper() + absp[1:]  # Fix lowercase drive letter
     print("OUTPUT PATH:      {}".format(absp))
+    print("KEY FILE:         {}".format(keypath))
     
     print("VERSION:          {}\n".format(ver))
 
