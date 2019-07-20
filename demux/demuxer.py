@@ -91,7 +91,7 @@ class Demuxer:
                     self.channelHandlers[vcdu.VCID]
                 except KeyError:
                     # Create new channel handler instance
-                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose, crclut, self.outputPath)
+                    self.channelHandlers[vcdu.VCID] = Channel(vcdu.VCID, self.verbose, crclut, self.outputPath, self.keys)
                     if self.verbose: print("  CREATED NEW CHANNEL HANDLER\n")
 
                 # Pass VCDU to appropriate channel handler
@@ -151,18 +151,21 @@ class Channel:
     Virtual channel data handler
     """
 
-    def __init__(self, vcid, v, crclut, output):
+    def __init__(self, vcid, v, crclut, output, k):
         """
         Initialises virtual channel data handler
         :param vcid: Virtual Channel ID
-        :param crclut: CP_PDU CRC LUT
         :param v: Verbose output flag
+        :param crclut: CP_PDU CRC LUT
+        :param output: xRIT file output path root
+        :param k: Decryption keys
         """
 
         self.VCID = vcid            # VCID for this handler
         self.verbose = v            # Verbose output flag
         self.crclut = crclut        # CP_PDU CRC LUT
         self.outputPath = output    # xRIT file output path root
+        self.keys = k               # Decryption keys
         self.counter = -1           # Last VCDU packet counter
         self.cCPPDU = None          # Current CP_PDU object
         self.cTPFile = None         # Current TP_File object
@@ -291,10 +294,10 @@ class Channel:
                 if self.verbose: print("    LENGTH:     OK\n")
                 
                 # Handle S_PDU (decryption)
-                spdu = CCSDS.S_PDU(self.cTPFile.PAYLOAD)
+                spdu = CCSDS.S_PDU(self.cTPFile.PAYLOAD, self.keys)
 
                 # Create new xRIT file
-                xrit = CCSDS.xRIT(spdu.data)
+                xrit = CCSDS.xRIT(spdu.PLAINTEXT)
                 xrit.save(self.outputPath)
                 xrit.print_info()
 

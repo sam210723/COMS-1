@@ -5,6 +5,7 @@ https://github.com/sam210723/COMS-1
 Parsing and assembly functions for all CCSDS protocol layers
 """
 
+from Crypto.Cipher import DES
 from tools import get_bits, get_bits_int
 import os
 
@@ -312,11 +313,74 @@ class TP_File:
 
 class S_PDU:
     """
-    Parses CCSDS Session Protocol Data Unit (S_PDU)
+    Decrypts CCSDS Session Protocol Data Unit (S_PDU)
     """
 
-    def __init__(self, data):
+    def __init__(self, data, k):
         self.data = data
+        self.keys = k
+        self.key = None
+        self.headerField = None
+        self.dataField = None
+        self.PLAINTEXT = None
+
+        # Check keys have been loaded
+        if self.keys != {}:
+            self.parse()
+
+            # Check encryption is applied to file
+            if self.key != 0:
+                self.decrypt()
+            else:
+                self.PLAINTEXT = self.data
+        else:
+            self.PLAINTEXT = self.data
+    
+    def parse(self):
+        """
+        Parses xRIT primary key headers
+        """
+        
+        primaryHeader = self.data[:16]
+
+        # Header fields
+        HEADER_TYPE = get_bits_int(primaryHeader, 0, 8, 128)               # File Counter (always 0x00)
+        HEADER_LEN = get_bits_int(primaryHeader, 8, 16, 128)               # Header Length (always 0x10)
+        FILE_TYPE = get_bits_int(primaryHeader, 24, 8, 128)                # File Type
+        TOTAL_HEADER_LEN = get_bits_int(primaryHeader, 32, 32, 128)        # Total xRIT Header Length
+        DATA_LEN = get_bits_int(primaryHeader, 64, 64, 128)                # Data Field Length
+
+        #print("  Header Length: {} bits ({} bytes)".format(TOTAL_HEADER_LEN, TOTAL_HEADER_LEN/8))
+        #print("  Data Length: {} bits ({} bytes)".format(DATA_LEN, DATA_LEN/8))
+
+        self.headerField = self.data[:TOTAL_HEADER_LEN]
+        self.dataField = self.data[TOTAL_HEADER_LEN: TOTAL_HEADER_LEN + DATA_LEN]
+
+        # Append null bytes to data field to fill last 8 byte DES block
+        dFMod8 = len(self.dataField) % 8
+        if dFMod8 != 0:
+            for i in range(dFMod8):
+                self.dataField += b'x00'
+            print("\nAdded {} null bytes to fill last DES block\n".format(dFMod8))
+        
+        # Loop through headers until Key header (type 7)
+        offset = 0
+        nextHeader = int.from_bytes(self.headerField[offset : offset + 1], byteorder='big')
+
+        while nextHeader != 7:
+            offset += int.from_bytes(self.headerField[offset + 1 : offset + 3], byteorder='big')
+            nextHeader = int.from_bytes(self.headerField[offset : offset + 1], byteorder='big')
+
+        # Parse Key header (type 7)
+        keyHLen = int.from_bytes(self.headerField[offset + 1 : offset + 3], byteorder='big')
+        index = self.headerField[offset + 5 : offset + keyHLen]
+        self.key = self.keys[index]
+
+    def decrypt(self):
+        decoder = DES.new(self.key, DES.MODE_ECB)
+        decData = decoder.decrypt(self.dataField)
+
+        self.PLAINTEXT = self.headerField + decData
 
 
 class xRIT:
