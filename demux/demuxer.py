@@ -227,7 +227,8 @@ class Channel:
                 self.cCPPDU = CCSDS.CP_PDU(postptr)
 
                 # Handle CP_PDUs less than one M_PDU in length
-                if 1 < self.cCPPDU.LENGTH < 886:
+                if 1 < self.cCPPDU.LENGTH < 886 and len(self.cCPPDU.PAYLOAD) > self.cCPPDU.LENGTH:
+                    # Remove trailing null bytes (M_PDU padding)
                     self.cCPPDU.PAYLOAD = self.cCPPDU.PAYLOAD[:self.cCPPDU.LENGTH]
                     
                     try:
