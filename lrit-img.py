@@ -29,8 +29,8 @@ def init():
 
     # Check if input is a directory
     if os.path.isdir(args.INPUT):
-        # Loop through files with .lrit.dec extension in input folder
-        for f in glob.glob(args.INPUT + "/*.lrit.dec"):
+        # Loop through files with .lrit extension in input folder
+        for f in glob.glob(args.INPUT + "/*.lrit"):
             files.append(f)
         files.sort()
         
@@ -230,7 +230,7 @@ def parse_fname(fpath):
 
     split = fpath.split("_")
     mode = split[1]
-    name = fpath.replace(".lrit.dec", "")[:-3]
+    name = fpath.replace(".lrit", "")[:-3]
     name = "IMG_" + name.split("IMG_")[1]
     segment = int(split[6][:2])
 
