@@ -221,21 +221,33 @@ class Channel:
                     if self.verbose: print("  NO CP_PDU TO FINISH (DROPPED PACKETS?)")
 
                 #TODO: Check CP_PDU continuity
-                
+
                 # Create new CP_PDU
                 postptr = mpdu.PACKET[mpdu.POINTER:]
                 self.cCPPDU = CCSDS.CP_PDU(postptr)
+
+                # Handle CP_PDUs less than one M_PDU in length
+                if 1 < self.cCPPDU.LENGTH < 886:
+                    self.cCPPDU.PAYLOAD = self.cCPPDU.PAYLOAD[:self.cCPPDU.LENGTH]
+                    
+                    try:
+                        lenok, crcok = self.cCPPDU.finish(b'', self.crclut)
+                        if self.verbose: self.check_CPPDU(lenok, crcok)
+
+                        # Handle finished CP_PDU
+                        self.handle_CPPDU(self.cCPPDU)
+                    except AttributeError:
+                        if self.verbose: print("  NO CP_PDU TO FINISH (DROPPED PACKETS?)")
 
             else:
                 # First CP_PDU in TP_File
                 # Create new CP_PDU
                 self.cCPPDU = CCSDS.CP_PDU(mpdu.PACKET)
-            
-            #TODO: Finish SEQ LAST CP_PDU before going to FILL
 
             # Handle special EOF CP_PDU
             if self.cCPPDU.is_EOF():
                 self.cCPPDU = None
+                if self.verbose: print("  [CP_PDU] EOF MARKER")
             else:
                 if self.verbose:
                     self.cCPPDU.print_info()
