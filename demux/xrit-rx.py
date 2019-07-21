@@ -148,6 +148,12 @@ def config_input():
 
     elif source == "FILE":
         global packetf
+
+        # Check VCDU file exists
+        if not path.exists(args.file):
+            print("INPUT FILE DOES NOT EXIST\nExiting...")
+            exit()
+        
         packetf = open(args.file, 'rb')
         print("Opened file: \"{}\"".format(args.file))
 
