@@ -28,6 +28,7 @@ class Demuxer:
         self.outputPath = output        # xRIT file output path root
         self.keys = k                   # Decryption keys
         self.channelHandlers = {}       # List of channel handlers
+        self.vcduCounter = -1           # VCDU continuity counter
 
         if downlink == "LRIT":
             self.coreWait = 54          # Core loop delay in ms for LRIT (108.8ms per packet @ 64 kbps)
@@ -76,6 +77,9 @@ class Demuxer:
                     if self.verbose: print("SPACECRAFT \"{}\" NOT SUPPORTED".format(vcdu.SCID))
                     continue
 
+                # Check VCDU continuity counter
+                self.continuity(vcdu)
+
                 # Check for VCID change
                 if lastVCID != vcdu.VCID:
                     if self.verbose: print()
@@ -107,6 +111,27 @@ class Demuxer:
                 dumpFile.close()
             
             return
+
+    def continuity(self, vcdu):
+        """
+        Checks VCDU packet continuity by comparing packet counters
+        """
+
+        # If at least one VCDU has been received
+        if self.vcduCounter != -1:
+            # Check counter reset
+            if self.vcduCounter == 16777215 and vcdu.COUNTER == 0:
+                self.vcduCounter = vcdu.COUNTER
+                return
+            
+            diff = vcdu.COUNTER - self.vcduCounter - 1
+            if diff != 0:
+                if self.verbose:
+                    print("  DROPPED {} PACKETS    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.vcduCounter, vcdu.VCID))
+                else:
+                    print("  DROPPED {} PACKETS".format(diff))
+        
+        self.vcduCounter = vcdu.COUNTER
 
     def push(self, packet):
         """
@@ -166,7 +191,6 @@ class Channel:
         self.crclut = crclut        # CP_PDU CRC LUT
         self.outputPath = output    # xRIT file output path root
         self.keys = k               # Decryption keys
-        self.counter = -1           # Last VCDU packet counter
         self.cCPPDU = None          # Current CP_PDU object
         self.cTPFile = None         # Current TP_File object
 
@@ -176,9 +200,6 @@ class Channel:
         Takes in VCDUs for the channel handler to process
         :param packet: Parsed VCDU object
         """
-
-        # Check VCDU continuity
-        self.VCDU_continuity(vcdu)
 
         # Parse M_PDU
         mpdu = CCSDS.M_PDU(vcdu.MPDU)
@@ -225,29 +246,6 @@ class Channel:
                 self.cCPPDU.append(mpdu.PACKET)
             except AttributeError:
                 if self.verbose: print("  NO CP_PDU TO APPEND M_PDU TO (DROPPED PACKETS?)")
-    
-
-    def VCDU_continuity(self, vcdu):
-        """
-        Checks VCDU packet continuity by comparing packet counters
-        """
-        #TODO: Check counter globally?
-
-        # If at least one VCDU has been received
-        if self.counter != -1:
-            # Check counter reset
-            if self.counter == 16777215 and vcdu.COUNTER == 0:
-                self.counter = vcdu.COUNTER
-                return
-            
-            diff = vcdu.COUNTER - self.counter - 1
-            if diff != 0:
-                if self.verbose:
-                    print("  DROPPED {} PACKETS    (CURRENT: {}   LAST: {}   VCID: {})".format(diff, vcdu.COUNTER, self.counter, vcdu.VCID))
-                else:
-                    print("  DROPPED {} PACKETS".format(diff))
-        
-        self.counter = vcdu.COUNTER
 
     
     def check_CPPDU(self, lenok, crcok):
