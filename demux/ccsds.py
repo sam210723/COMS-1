@@ -355,13 +355,6 @@ class S_PDU:
 
         self.headerField = self.data[:TOTAL_HEADER_LEN]
         self.dataField = self.data[TOTAL_HEADER_LEN: TOTAL_HEADER_LEN + DATA_LEN]
-
-        # Append null bytes to data field to fill last 8 byte DES block
-        dFMod8 = len(self.dataField) % 8
-        if dFMod8 != 0:
-            for i in range(dFMod8):
-                self.dataField += b'x00'
-            print("\nAdded {} null bytes to fill last DES block\n".format(dFMod8))
         
         # Loop through headers until Key header (type 7)
         offset = 0
@@ -381,6 +374,15 @@ class S_PDU:
         except KeyError:
             if index != b'\x00\x00': print("  UNKNOWN ENCRYPTION KEY INDEX")
             self.key = 0
+        
+        # Check block length if encryption is applied
+        if self.key != 0:
+            # Append null bytes to data field to fill last 8 byte DES block
+            dFMod8 = len(self.dataField) % 8
+            if dFMod8 != 0:
+                for i in range(dFMod8):
+                    self.dataField += b'x00'
+                #print("  Added {} null bytes to fill last DES block".format(dFMod8))
 
     def decrypt(self):
         """
