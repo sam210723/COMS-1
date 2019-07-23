@@ -1,2 +1,2 @@
 #!/bin/bash
-python xrit-rx.py
+python3 xrit-rx.py
