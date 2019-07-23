@@ -374,7 +374,13 @@ class S_PDU:
         # Parse Key header (type 7)
         keyHLen = int.from_bytes(self.headerField[offset + 1 : offset + 3], byteorder='big')
         index = self.headerField[offset + 5 : offset + keyHLen]
-        self.key = self.keys[index]
+
+        # Catch wrong key index
+        try:
+            self.key = self.keys[index]
+        except KeyError:
+            if index != b'\x00\x00': print("  UNKNOWN ENCRYPTION KEY INDEX")
+            self.key = None
 
     def decrypt(self):
         """
