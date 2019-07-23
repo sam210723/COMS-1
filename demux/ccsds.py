@@ -380,7 +380,7 @@ class S_PDU:
             self.key = self.keys[index]
         except KeyError:
             if index != b'\x00\x00': print("  UNKNOWN ENCRYPTION KEY INDEX")
-            self.key = None
+            self.key = 0
 
     def decrypt(self):
         """
